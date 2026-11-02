@@ -26,6 +26,8 @@ Proposition à valider : la V1 couvre les quatre fonctions demandées, plus ce q
 | V2 (candidats) | Expiration en jours calendaires · mode vente (import de PDF, un ticket affiché à la fois, compteur de vendus) · export des ventes · sauvegarde des réglages |
 | Hors périmètre | Serveur central ou cloud · paiement en ligne · iOS · gestion du routeur au-delà du hotspot (pare-feu, DHCP, etc.) |
 
+Mise à jour prévue (V3) : un VPN intégré à l'application, du type « Back to Home » de MikroTik. Ce qui est possible et ce qui ne l'est pas est détaillé en section 12.
+
 ## 3. Utilisateurs et rôles
 
 La V1 a un seul rôle d'utilisation : le gérant, qui détient le mot de passe du routeur.
@@ -187,3 +189,31 @@ Questions ouvertes — les réponses fixent la V1 :
 - [ ] Format d'impression : feuille A4 en 3 colonnes, ou petits tickets pour une imprimante thermique ?
 - [ ] Devise des prix : FC, USD, ou les deux ?
 - [ ] Modèle du routeur et version de RouterOS (6 ou 7) ?
+
+## 12. Évolution prévue : VPN intégré (V3)
+
+Objectif : l'application ouvre elle-même le tunnel vers le routeur, sans passer par l'application « Back to Home » de MikroTik. Copier Back to Home à l'identique est impossible, car son relais appartient à MikroTik ; un VPN WireGuard intégré, configuré automatiquement par l'application, est possible.
+
+Selon la [documentation de MikroTik](https://help.mikrotik.com/docs/x/BwAuD), Back to Home est basé sur WireGuard, demande RouterOS 7.11 ou plus et un routeur ARM, ARM64 ou TILE. Si le routeur n'a pas d'adresse IP publique, la connexion passe par un relais de MikroTik.
+
+| Élément de Back to Home | Reproductible dans Mtandao Ticket ? |
+| --- | --- |
+| Tunnel WireGuard sur Android | Oui : tunnel WireGuard intégré à l'application, via le service VPN d'Android (licence de la bibliothèque et règles de Google Play à vérifier) |
+| Configuration du routeur (interface WireGuard, pair, règles) | Oui : envoyée par l'application via l'API RouterOS, sans WinBox ; demande RouterOS 7 |
+| Appairage d'un téléphone | Oui : l'application génère les clés et la configuration, avec un QR code pour un second appareil |
+| Relais pour un routeur sans IP publique | Non : service de MikroTik. Il faut une IP publique sur le routeur, ou un relais à nous (petit serveur loué) |
+| Routeurs compatibles | À vérifier pour ton modèle : les contraintes de Back to Home (ARM, ARM64, TILE) ne sont pas forcément celles de WireGuard seul |
+
+Exigences provisoires :
+
+- F22 : activer le VPN depuis l'écran d'un routeur, en un geste, avec configuration automatique du routeur.
+- F23 : un téléphone = un pair WireGuard ; révoquer un téléphone perdu.
+- F24 : afficher l'état du tunnel (connecté, injoignable) et le basculer en wifi local sans VPN.
+
+Risque principal : si le routeur est derrière un CGNAT (fréquent avec Starlink et les opérateurs mobiles), un VPN sans relais ne peut pas le joindre.
+
+Questions pour cette étape :
+
+- [ ] Le routeur de la wifi zone a-t-il une adresse IP publique, ou est-il derrière un CGNAT ?
+- [ ] Quel modèle de routeur (architecture), et quelle version de RouterOS ?
+- [ ] Accepter de louer un petit serveur relais (coût mensuel) si le routeur n'a pas d'IP publique ?
