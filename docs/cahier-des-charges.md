@@ -192,6 +192,8 @@ Questions ouvertes — les réponses fixent la V1 :
 
 ## 12. Évolution prévue : VPN intégré (V3)
 
+Décision du 2 novembre 2026 : cette évolution est reportée de plusieurs mois. Pour la V1, l'application s'appuie sur l'application « Back to Home » de MikroTik pour l'accès à distance.
+
 Objectif : l'application ouvre elle-même le tunnel vers le routeur, sans passer par l'application « Back to Home » de MikroTik. Copier Back to Home à l'identique est impossible, car son relais appartient à MikroTik ; un VPN WireGuard intégré, configuré automatiquement par l'application, est possible.
 
 Selon la [documentation de MikroTik](https://help.mikrotik.com/docs/x/BwAuD), Back to Home est basé sur WireGuard, demande RouterOS 7.11 ou plus et un routeur ARM, ARM64 ou TILE. Si le routeur n'a pas d'adresse IP publique, la connexion passe par un relais de MikroTik.
