@@ -22,7 +22,7 @@ Proposition à valider : la V1 couvre les quatre fonctions demandées, plus ce q
 
 | Phase | Contenu |
 | --- | --- |
-| V1 | Routeurs enregistrés · profils · génération de tickets · PDF avec QR · lots · utilisateurs actifs · rapport de ventes · expiration en jours calendaires (à confirmer) |
+| V1 | Routeurs enregistrés · profils · génération de tickets · PDF avec QR · lots · utilisateurs actifs · rapport de ventes · expiration en jours calendaires |
 | V2 (candidats) | Export des ventes · sauvegarde des réglages |
 | Hors périmètre | Serveur central ou cloud · paiement en ligne · iOS · gestion du routeur au-delà du hotspot (pare-feu, DHCP, etc.) |
 
@@ -62,7 +62,7 @@ Huit modules, 21 exigences. « Indispensable » = nécessaire pour la V1 ; « So
 | F16 | Ventes | Rapport par mois, avec total encaissé et nombre de tickets | Indispensable |
 | F17 | Ventes | Détail d'une journée : heure, ticket, profil, prix | Indispensable |
 | F18 | Ventes | Exporter les ventes (CSV ou PDF) | Souhaité |
-| F19 | Profils | Expiration en jours calendaires depuis la première connexion | Indispensable (à confirmer) |
+| F19 | Profils | Expiration en jours calendaires depuis la première connexion | Indispensable |
 | F20 | Mode vente | Importer un PDF de tickets, afficher un ticket à la fois, marquer vendu, compteur | Abandonné (pas de fusion) |
 | F21 | Routeurs | Sauvegarder et restaurer les réglages de l'application | Souhaité |
 
@@ -184,10 +184,10 @@ Le risque principal : le script de vente n'a jamais tourné sur le routeur réel
 Questions ouvertes — les réponses fixent la V1 :
 
 - [ ] Un seul gérant sur un seul téléphone, ou plusieurs vendeurs avec des droits limités ?
-- [ ] L'expiration en jours calendaires (depuis la première connexion) est-elle nécessaire dès la V1 ? Réponse du 2 novembre 2026 : oui, à confirmer ; retenue en V1 en attendant (F19).
+- [ ] L'expiration en jours calendaires (depuis la première connexion) est-elle nécessaire dès la V1 ? Confirmé le 2 novembre 2026 : oui, retenue en V1 (F19).
 - [ ] Faut-il fusionner avec l'application de vente de tickets (import de PDF, un ticket à la fois, compteur de vendus) ou garder deux applications ? Décidé le 2 novembre 2026 : pas de fusion, deux applications séparées.
 - [ ] Format d'impression : feuille A4 en 3 colonnes, ou petits tickets pour une imprimante thermique ? Décidé le 2 novembre 2026 : feuille A4.
-- [ ] Devise des prix : FC, USD, ou les deux ?
+- [ ] Devise des prix : FC, USD, ou les deux ? Décidé le 2 novembre 2026 : FC uniquement.
 - [ ] Modèle du routeur et version de RouterOS (6 ou 7) ?
 
 ## 12. Évolution prévue : VPN intégré (V3)
