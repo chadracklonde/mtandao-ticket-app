@@ -95,9 +95,9 @@ void main() {
 
     // Ventes : la vente d'aujourd'hui apparaît dans le rapport du jour.
     await tester.tap(inNav('Ventes'));
-    await settle(tester);
-    expect(find.text('500 FC'), findsWidgets);
+    await settle(tester, 60);
     expect(find.text('Tickets vendus'), findsOneWidget);
+    expect(find.text('500 FC'), findsWidgets);
 
     // Profils
     await tester.tap(inNav('Profils'));

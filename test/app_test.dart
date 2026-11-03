@@ -22,7 +22,8 @@ void main() {
     expect(find.text('192.168.88.1'), findsOneWidget);
     expect(find.text('8728'), findsOneWidget);
     expect(find.text('FC'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Tester la connexion'), 300);
+    await tester.scrollUntilVisible(find.text('Tester la connexion'), 300,
+        scrollable: find.byType(Scrollable).first);
     expect(find.text('Tester la connexion'), findsOneWidget);
   });
 }
