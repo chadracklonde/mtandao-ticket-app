@@ -6,6 +6,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,7 +26,7 @@ jobs:
           cache: true
 
       - name: Version de Flutter
-        run: flutter --version
+        run: mkdir -p /tmp/logs && flutter --version 2>&1 | tee /tmp/logs/00-version.txt
 
       - name: Générer le dossier android
         run: flutter create --org cd.xsoftdesign --project-name mtandao_ticket --platforms android .
@@ -36,24 +39,36 @@ jobs:
           grep -n 'INTERNET' "$f"
 
       - name: Dépendances
-        run: flutter pub get
+        run: flutter pub get 2>&1 | tee /tmp/logs/01-pub-get.txt; exit ${PIPESTATUS[0]}
 
       - name: Icône de l'application
-        run: dart run flutter_launcher_icons
+        run: dart run flutter_launcher_icons 2>&1 | tee /tmp/logs/02-icons.txt; exit ${PIPESTATUS[0]}
         continue-on-error: true
 
       - name: Analyse du code
-        run: flutter analyze
+        run: flutter analyze 2>&1 | tee /tmp/logs/03-analyze.txt; exit ${PIPESTATUS[0]}
         continue-on-error: true
 
       - name: Tests
-        run: flutter test
+        run: flutter test 2>&1 | tee /tmp/logs/04-test.txt; exit ${PIPESTATUS[0]}
         continue-on-error: true
 
       - name: APK
-        run: flutter build apk --release
+        run: flutter build apk --release 2>&1 | tee /tmp/logs/05-apk.txt; exit ${PIPESTATUS[0]}
+
+      - name: Publier les journaux (branche ci-logs)
+        if: always()
+        run: |
+          cd /tmp/logs && ls -la
+          git config --global user.name 'ci'
+          git config --global user.email 'ci@users.noreply.github.com'
+          rm -rf /tmp/pub && mkdir /tmp/pub && cp /tmp/logs/* /tmp/pub/ && cd /tmp/pub
+          git init -q && git checkout -q -b ci-logs && git add -A
+          git commit -q -m "journaux du $GITHUB_SHA"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-logs
 
       - uses: actions/upload-artifact@v4
         with:
           name: mtandao-ticket-apk
+          if-no-files-found: ignore
           path: build/app/outputs/flutter-apk/app-release.apk
