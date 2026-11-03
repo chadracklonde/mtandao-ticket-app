@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../models.dart';
 import '../services/mikhmon_service.dart';
+import '../services/sales_report.dart';
 import '../util.dart';
 import '../widgets/async_body.dart';
 
-/// Rapport de ventes par mois, avec détail par jour.
+/// Rapport de ventes : jour, mois ou période choisie.
 class SalesScreen extends StatelessWidget {
   const SalesScreen({super.key, required this.service, required this.session});
 
@@ -16,37 +17,94 @@ class SalesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AsyncBody<List<Sale>>(
       load: service.sales,
-      builder: (context, sales, reload) => _SalesReport(sales: sales, session: session),
+      builder: (context, sales, reload) => SalesReportView(sales: sales, session: session),
     );
   }
 }
 
-class _SalesReport extends StatefulWidget {
-  const _SalesReport({required this.sales, required this.session});
+enum ReportMode { day, month, period }
+
+class SalesReportView extends StatefulWidget {
+  const SalesReportView({super.key, required this.sales, required this.session});
 
   final List<Sale> sales;
   final Session session;
 
   @override
-  State<_SalesReport> createState() => _SalesReportState();
+  State<SalesReportView> createState() => _SalesReportViewState();
 }
 
-class _SalesReportState extends State<_SalesReport> {
+class _SalesReportViewState extends State<SalesReportView> {
+  ReportMode _mode = ReportMode.day;
+  late DateTime _day;
   late DateTime _month;
+  late DateTimeRange _period;
 
   @override
   void initState() {
     super.initState();
     final now = DateTime.now();
+    _day = SalesSummary.dayOf(now);
     _month = DateTime(now.year, now.month);
+    final (first, _) = SalesSummary.monthRange(now);
+    _period = DateTimeRange(start: first, end: SalesSummary.dayOf(now));
   }
 
-  void _shift(int delta) =>
-      setState(() => _month = DateTime(_month.year, _month.month + delta));
+  SalesSummary get _summary {
+    switch (_mode) {
+      case ReportMode.day:
+        return SalesSummary.of(widget.sales, _day, _day);
+      case ReportMode.month:
+        final (a, b) = SalesSummary.monthRange(_month);
+        return SalesSummary.of(widget.sales, a, b);
+      case ReportMode.period:
+        return SalesSummary.of(widget.sales, _period.start, _period.end);
+    }
+  }
 
-  void _showDay(BuildContext context, DateTime day, List<Sale> sales) {
+  String get _title {
+    switch (_mode) {
+      case ReportMode.day:
+        return formatDate(_day);
+      case ReportMode.month:
+        return '${monthNames[_month.month - 1]} ${_month.year}';
+      case ReportMode.period:
+        return 'Du ${formatDate(_period.start)} au ${formatDate(_period.end)}';
+    }
+  }
+
+  void _shift(int delta) {
+    setState(() {
+      if (_mode == ReportMode.day) {
+        _day = DateTime(_day.year, _day.month, _day.day + delta);
+      } else if (_mode == ReportMode.month) {
+        _month = DateTime(_month.year, _month.month + delta);
+      }
+    });
+  }
+
+  Future<void> _pick() async {
+    if (_mode == ReportMode.day) {
+      final d = await showDatePicker(
+        context: context,
+        initialDate: _day,
+        firstDate: DateTime(2020),
+        lastDate: DateTime.now().add(const Duration(days: 1)),
+      );
+      if (d != null) setState(() => _day = SalesSummary.dayOf(d));
+    } else if (_mode == ReportMode.period) {
+      final r = await showDateRangePicker(
+        context: context,
+        initialDateRange: _period,
+        firstDate: DateTime(2020),
+        lastDate: DateTime.now().add(const Duration(days: 1)),
+      );
+      if (r != null) setState(() => _period = r);
+    }
+  }
+
+  void _showDay(BuildContext context, DayTotal d) {
     final currency = widget.session.currency;
-    final total = sales.fold<int>(0, (a, s) => a + s.price);
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -59,49 +117,68 @@ class _SalesReportState extends State<_SalesReport> {
           controller: controller,
           children: [
             ListTile(
-              title: Text(formatDate(day), style: Theme.of(ctx).textTheme.titleMedium),
-              subtitle: Text('${sales.length} ticket(s)'),
-              trailing: Text(formatMoney(total, currency),
+              title: Text(formatDate(d.day), style: Theme.of(ctx).textTheme.titleMedium),
+              subtitle: Text('${d.sales.length} ticket(s)'),
+              trailing: Text(formatMoney(d.total, currency),
                   style: Theme.of(ctx).textTheme.titleMedium),
             ),
             const Divider(height: 1),
-            for (final s in sales)
-              ListTile(
-                dense: true,
-                title: Text(s.user),
-                subtitle: Text('${formatTime(s.time)} · ${s.profile} · ${s.address}'),
-                trailing: Text(formatMoney(s.price, currency)),
-              ),
+            for (final s in d.sales) _saleTile(s, currency),
           ],
         ),
       ),
     );
   }
 
+  Widget _saleTile(Sale s, String currency) => ListTile(
+        dense: true,
+        title: Text(s.user),
+        subtitle: Text('${formatTime(s.time)} · ${s.profile} · ${s.address}'),
+        trailing: Text(formatMoney(s.price, currency)),
+      );
+
   @override
   Widget build(BuildContext context) {
     final currency = widget.session.currency;
-    final inMonth = widget.sales
-        .where((s) => s.time.year == _month.year && s.time.month == _month.month)
-        .toList();
-    final total = inMonth.fold<int>(0, (a, s) => a + s.price);
-
-    final byDay = <DateTime, List<Sale>>{};
-    for (final s in inMonth) {
-      byDay.putIfAbsent(DateTime(s.time.year, s.time.month, s.time.day), () => []).add(s);
-    }
-    final days = byDay.keys.toList()..sort((a, b) => b.compareTo(a));
+    final summary = _summary;
+    final canShift = _mode != ReportMode.period;
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 24),
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: SegmentedButton<ReportMode>(
+            showSelectedIcon: false,
+            segments: const [
+              ButtonSegment(value: ReportMode.day, label: Text('Jour')),
+              ButtonSegment(value: ReportMode.month, label: Text('Mois')),
+              ButtonSegment(value: ReportMode.period, label: Text('Période')),
+            ],
+            selected: {_mode},
+            onSelectionChanged: (s) => setState(() => _mode = s.first),
+          ),
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            IconButton(onPressed: () => _shift(-1), icon: const Icon(Icons.chevron_left)),
-            Text('${monthNames[_month.month - 1]} ${_month.year}',
-                style: Theme.of(context).textTheme.titleMedium),
-            IconButton(onPressed: () => _shift(1), icon: const Icon(Icons.chevron_right)),
+            IconButton(
+              tooltip: 'Précédent',
+              onPressed: canShift ? () => _shift(-1) : null,
+              icon: const Icon(Icons.chevron_left),
+            ),
+            Flexible(
+              child: TextButton(
+                onPressed: _mode == ReportMode.month ? null : _pick,
+                child: Text(_title, style: Theme.of(context).textTheme.titleMedium),
+              ),
+            ),
+            IconButton(
+              tooltip: 'Suivant',
+              onPressed: canShift ? () => _shift(1) : null,
+              icon: const Icon(Icons.chevron_right),
+            ),
           ],
         ),
         Card(
@@ -111,28 +188,41 @@ class _SalesReportState extends State<_SalesReport> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _Stat(label: 'Encaissé', value: formatMoney(total, currency)),
-                _Stat(label: 'Tickets vendus', value: '${inMonth.length}'),
+                _Stat(label: 'Encaissé', value: formatMoney(summary.total, currency)),
+                _Stat(label: 'Tickets vendus', value: '${summary.count}'),
               ],
             ),
           ),
         ),
-        if (days.isEmpty)
+        if (summary.count == 0)
           const Padding(
             padding: EdgeInsets.all(32),
-            child: Center(child: Text('Aucune vente ce mois-ci.', textAlign: TextAlign.center)),
+            child: Center(child: Text('Aucune vente sur cette période.', textAlign: TextAlign.center)),
           ),
-        for (final day in days)
-          ListTile(
-            title: Text(formatDate(day)),
-            subtitle: Text('${byDay[day]!.length} ticket(s)'),
-            trailing: Text(
-              formatMoney(byDay[day]!.fold<int>(0, (a, s) => a + s.price), currency),
-              style: Theme.of(context).textTheme.titleSmall,
+        if (summary.byProfile.length > 1) ...[
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Text('Par profil', style: TextStyle(fontWeight: FontWeight.w600)),
+          ),
+          for (final p in summary.byProfile)
+            ListTile(
+              dense: true,
+              title: Text(p.profile),
+              subtitle: Text('${p.count} ticket(s)'),
+              trailing: Text(formatMoney(p.total, currency)),
             ),
-            onTap: () => _showDay(context, day, byDay[day]!),
-          ),
-        const SizedBox(height: 24),
+        ],
+        if (_mode == ReportMode.day)
+          for (final s in summary.sales) _saleTile(s, currency)
+        else
+          for (final d in summary.days)
+            ListTile(
+              title: Text(formatDate(d.day)),
+              subtitle: Text('${d.sales.length} ticket(s)'),
+              trailing: Text(formatMoney(d.total, currency),
+                  style: Theme.of(context).textTheme.titleSmall),
+              onTap: () => _showDay(context, d),
+            ),
       ],
     );
   }

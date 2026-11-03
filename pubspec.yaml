@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   crypto: ^3.0.3
   shared_preferences: ^2.2.3
   flutter_secure_storage: ^9.2.2
@@ -23,6 +25,13 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Variable.ttf
+    - family: Sora
+      fonts:
+        - asset: assets/fonts/Sora-Variable.ttf
 
 flutter_launcher_icons:
   android: true
