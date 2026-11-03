@@ -1,6 +1,6 @@
 # Mtandao Ticket — Cahier des charges
 
-Version du 2 novembre 2026 (brouillon à valider).
+Version du 3 novembre 2026 (validée par Chadrack le 3 novembre 2026).
 
 ## 1. Contexte et objectifs
 
@@ -14,7 +14,7 @@ Objectifs :
 - Produire des tickets imprimables avec QR code.
 - Rester simple : un gérant de wifi zone doit s'en servir sans formation longue.
 
-État actuel : un prototype Flutter a été écrit (génération, PDF, actifs, ventes). Il sert de base d'étude ; il sera repris ou réécrit une fois ce cahier validé.
+État actuel : un prototype Flutter a été écrit (génération, PDF, actifs, ventes). Il sert de base d'étude ; il est repris dans ce dépôt sous le nom Mtandao Ticket (phase Socle), après validation de ce cahier.
 
 ## 2. Périmètre
 
