@@ -35,7 +35,7 @@ La V1 a un seul rôle d'utilisation : le gérant, qui détient le mot de passe d
 | Rôle | Ce qu'il fait | Phase |
 | --- | --- | --- |
 | Gérant | Tout : routeurs, profils, génération, impression, suivi, ventes | V1 |
-| Vendeur (à confirmer) | Distribue les tickets déjà générés, sans accès aux profils ni au rapport | V2 |
+| Vendeur | Hors périmètre : la distribution des tickets relève de l'autre application | — |
 | Client de la wifi zone | Se connecte avec un ticket ; n'utilise pas l'application | — |
 
 ## 4. Besoins fonctionnels
@@ -183,7 +183,7 @@ Le risque principal : le script de vente n'a jamais tourné sur le routeur réel
 
 Questions ouvertes — les réponses fixent la V1 :
 
-- [ ] Un seul gérant sur un seul téléphone, ou plusieurs vendeurs avec des droits limités ?
+- [x] Un seul gérant sur un seul téléphone, ou plusieurs vendeurs avec des droits limités ? Décidé le 3 novembre 2026 : l'application fonctionne comme Mikhmon, sans aspect vente (un seul gérant) ; la vente est gérée par une autre application.
 - [ ] L'expiration en jours calendaires (depuis la première connexion) est-elle nécessaire dès la V1 ? Confirmé le 2 novembre 2026 : oui, retenue en V1 (F19).
 - [ ] Faut-il fusionner avec l'application de vente de tickets (import de PDF, un ticket à la fois, compteur de vendus) ou garder deux applications ? Décidé le 2 novembre 2026 : pas de fusion, deux applications séparées.
 - [ ] Format d'impression : feuille A4 en 3 colonnes, ou petits tickets pour une imprimante thermique ? Décidé le 2 novembre 2026 : feuille A4.
