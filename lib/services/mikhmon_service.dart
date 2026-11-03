@@ -15,6 +15,7 @@ class GenerateRequest {
     this.length = 6,
     this.separate = false,
     this.charset = CodeCharset.digits,
+    this.timeLimit,
   });
 
   final HotspotProfile profile;
@@ -25,6 +26,12 @@ class GenerateRequest {
   /// Vrai : identifiant et mot de passe différents. Faux : un seul code.
   final bool separate;
   final CodeCharset charset;
+
+  /// Limite de temps des tickets (ex. `1h`, `1d`), qui démarre à la première
+  /// connexion. Null : celle du profil. Vide : illimitée.
+  final String? timeLimit;
+
+  String get effectiveTimeLimit => (timeLimit ?? profile.uptime).trim().toLowerCase();
 }
 
 /// La génération s'est arrêtée en cours de route (réseau coupé, routeur
@@ -77,9 +84,6 @@ class MikhmonService {
     }
     if (p.uptime.isNotEmpty && !uptimePattern.hasMatch(p.uptime)) {
       throw RouterOsException('Durée invalide. Exemples : 30m, 1h, 24h, 7d.');
-    }
-    if (p.validity.isNotEmpty && !uptimePattern.hasMatch(p.validity)) {
-      throw RouterOsException('Validité invalide. Exemples : 1d, 7d, 30d.');
     }
     final words = [
       if (p.id.isEmpty) '/ip/hotspot/user/profile/add' else '/ip/hotspot/user/profile/set',
@@ -160,7 +164,7 @@ class MikhmonService {
             '=password=$password',
             '=profile=${r.profile.name}',
             '=comment=$comment',
-            if (r.profile.uptime.isNotEmpty) '=limit-uptime=${r.profile.uptime}',
+            if (r.effectiveTimeLimit.isNotEmpty) '=limit-uptime=${r.effectiveTimeLimit}',
           ]);
           used.add(name);
           out.add(Voucher(
@@ -170,8 +174,7 @@ class MikhmonService {
             profile: r.profile.name,
             comment: comment,
             price: r.profile.price,
-            uptime: r.profile.uptime,
-            validity: r.profile.validity,
+            uptime: r.effectiveTimeLimit,
           ));
           created = true;
         } on RouterOsException catch (e) {
@@ -193,7 +196,7 @@ class MikhmonService {
     final byName = {for (final p in profileList) p.name: p};
     final rows = await client.run([
       '/ip/hotspot/user/print',
-      '=.proplist=.id,name,password,profile,comment',
+      '=.proplist=.id,name,password,profile,comment,limit-uptime',
     ]);
     final groups = <String, List<Voucher>>{};
     for (final r in rows) {
@@ -208,8 +211,7 @@ class MikhmonService {
         profile: profileName,
         comment: comment,
         price: p?.price ?? 0,
-        uptime: p?.uptime ?? '',
-        validity: p?.validity ?? '',
+        uptime: r['limit-uptime'] ?? p?.uptime ?? '',
       );
       groups.putIfAbsent('$comment|$profileName', () => []).add(v);
     }

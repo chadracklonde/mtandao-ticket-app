@@ -61,17 +61,24 @@ void main() {
           throwsA(isA<RouterOsException>()));
     });
 
-    test('validité calendaire enregistrée et relue (F19)', () async {
+    test('limite de temps choisie à la génération (F19)', () async {
       final t = await setUpService();
-      await t.service.saveProfile(const HotspotProfile(name: '7J', price: 3000, validity: '7d'));
-      final back = (await t.service.profiles()).single;
-      expect(back.validity, '7d');
-      expect(t.router.profiles.single['on-login'], contains('interval=7d'));
-      final v = (await t.service.generate(GenerateRequest(profile: back, count: 1))).single;
-      expect(v.validity, '7d');
-      await expectLater(
-          t.service.saveProfile(const HotspotProfile(name: 'x', validity: '7 jours')),
-          throwsA(isA<RouterOsException>()));
+      await t.service.saveProfile(day);
+      final profile = (await t.service.profiles()).single;
+      expect(t.router.profiles.single['on-login'], contains('interval=\$lu'));
+      // Limite propre au lot : 1h au lieu de 1d (profil).
+      final v = (await t.service.generate(
+              GenerateRequest(profile: profile, count: 2, timeLimit: '1h')))
+          .first;
+      expect(v.uptime, '1h');
+      expect(t.router.hotspotUsers.every((u) => u['limit-uptime'] == '1h'), isTrue);
+      // Sans choix : celle du profil.
+      final w = (await t.service.generate(GenerateRequest(profile: profile, count: 1))).single;
+      expect(w.uptime, '1d');
+      expect(t.router.hotspotUsers.last['limit-uptime'], '1d');
+      // Vide : illimité.
+      await t.service.generate(GenerateRequest(profile: profile, count: 1, timeLimit: ''));
+      expect(t.router.hotspotUsers.last.containsKey('limit-uptime'), isFalse);
     });
 
     test('suppression', () async {

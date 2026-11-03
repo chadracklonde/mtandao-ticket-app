@@ -236,7 +236,7 @@ class FakeRouter {
         meta?.group(1) ?? '0',
         ip,
         'AA:BB:CC:DD:EE:FF',
-        meta?.group(2) ?? '',
+        u['limit-uptime'] ?? '',
         profile['name']!,
         comment,
       ].join('-|-'),

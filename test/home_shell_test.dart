@@ -36,7 +36,7 @@ void main() {
         '.id': '*P1',
         'name': '24H',
         'shared-users': '1',
-        'on-login': '#mkm:price=500;uptime=1d;validity=\n',
+        'on-login': '#mkm:price=500;uptime=1d\n',
       });
       router.hotspotUsers.add({
         '.id': '*U1',

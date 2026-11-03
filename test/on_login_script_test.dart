@@ -35,22 +35,23 @@ String? checkBalanced(String script) {
 
 void main() {
   const simple = HotspotProfile(name: '24H', price: 500, uptime: '1d');
-  const expiring = HotspotProfile(name: '7J', price: 3000, uptime: '', validity: '7d');
+  const expiring = HotspotProfile(name: '7J', price: 3000, uptime: '7d');
 
   group('script on-login', () {
-    test('forme correcte sans expiration', () {
+    test('forme correcte et lecture de la limite sur le ticket', () {
       final s = simple.buildOnLogin();
       expect(checkBalanced(s), isNull);
-      expect(s, startsWith('#mkm:price=500;uptime=1d;validity=\n'));
-      expect(s, isNot(contains('scheduler')));
+      expect(s, startsWith('#mkm:price=500;uptime=1d\n'));
+      expect(s, contains(r':local lu [/ip hotspot user get [find where name=$user] limit-uptime]'));
     });
 
-    test('forme correcte avec expiration', () {
+    test('expiration programmée à partir de la limite du ticket', () {
       final s = expiring.buildOnLogin();
       expect(checkBalanced(s), isNull);
-      expect(s, startsWith('#mkm:price=3000;uptime=;validity=7d\n'));
-      expect(s, contains('/system scheduler add name=("mkm-e-" . \$user) interval=7d'));
-      expect(s, contains('start-date=\$d start-time=\$st'));
+      expect(s, contains(r'/system scheduler add name=("mkm-e-" . $user) interval=$lu'));
+      expect(s, contains(r'start-date=$d start-time=$st'));
+      // Pas d'expiration si le ticket est illimité.
+      expect(s, contains(r':if ([:len $lu] > 0 and $lu > 00:00:00) do={'));
       // Le planificateur est créé après l'enregistrement de la vente.
       expect(s.indexOf('comment=mikhmon\n'), lessThan(s.indexOf('scheduler add')));
       expect(s.indexOf('"used-"'), lessThan(s.indexOf('scheduler add')));
@@ -60,7 +61,7 @@ void main() {
       final s = simple.buildOnLogin();
       expect(
         s,
-        contains(r'"-|-500-|-" . $a . "-|-" . $m . "-|-1d-|-24H-|-" . $c'),
+        contains(r'"-|-500-|-" . $a . "-|-" . $m . "-|-" . [:tostr $lu] . "-|-24H-|-" . $c'),
       );
     });
 
@@ -70,15 +71,14 @@ void main() {
       expect(checkBalanced(':if (1) do={ }}'), isNotNull);
     });
 
-    test('prix, durée et validité relus depuis le routeur', () {
+    test('prix et limite par défaut relus depuis le routeur', () {
       final back = HotspotProfile.fromRow({
         '.id': '*1',
         'name': '7J',
         'on-login': expiring.buildOnLogin(),
       });
       expect(back.price, 3000);
-      expect(back.uptime, '');
-      expect(back.validity, '7d');
+      expect(back.uptime, '7d');
     });
 
     test('profils créés par une version précédente (sans validité)', () {
@@ -89,7 +89,6 @@ void main() {
       });
       expect(back.price, 500);
       expect(back.uptime, '1d');
-      expect(back.validity, '');
     });
   });
 }

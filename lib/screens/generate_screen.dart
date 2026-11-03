@@ -46,6 +46,8 @@ class _GenerateFormState extends State<_GenerateForm> {
   final _formKey = GlobalKey<FormState>();
   final _count = TextEditingController(text: '10');
   final _prefix = TextEditingController();
+  final _limit = TextEditingController();
+  String? _limitFor;
   String? _profileName;
   int _length = 6;
   bool _separate = false;
@@ -58,6 +60,7 @@ class _GenerateFormState extends State<_GenerateForm> {
   void dispose() {
     _count.dispose();
     _prefix.dispose();
+    _limit.dispose();
     super.dispose();
   }
 
@@ -87,6 +90,7 @@ class _GenerateFormState extends State<_GenerateForm> {
           length: _length,
           separate: _separate,
           charset: _charset,
+          timeLimit: _limit.text.trim().toLowerCase(),
         ),
         onProgress: (d, t) {
           if (mounted) setState(() => _done = d);
@@ -113,6 +117,10 @@ class _GenerateFormState extends State<_GenerateForm> {
   Widget build(BuildContext context) {
     final profile = _profile;
     final currency = widget.session.currency;
+    if (profile != null && _limitFor != profile.name) {
+      _limitFor = profile.name;
+      _limit.text = profile.uptime;
+    }
     return Form(
       key: _formKey,
       child: Column(
@@ -132,8 +140,6 @@ class _GenerateFormState extends State<_GenerateForm> {
               padding: const EdgeInsets.only(top: 8, left: 4),
               child: Text(
                 [
-                  if (profile.uptime.isNotEmpty) 'Durée ${profile.uptime}',
-                  if (profile.validity.isNotEmpty) 'Expire après ${profile.validity}',
                   if (profile.price > 0) formatMoney(profile.price, currency),
                   if (profile.rateLimit.isNotEmpty) 'Débit ${profile.rateLimit}',
                   '${profile.sharedUsers} appareil(s)',
@@ -141,6 +147,33 @@ class _GenerateFormState extends State<_GenerateForm> {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _limit,
+            enabled: !_busy,
+            autocorrect: false,
+            decoration: const InputDecoration(
+              labelText: 'Limite de temps',
+              helperText: '1h = 1 heure, 1d = 1 jour. Le temps démarre à la première '
+                  'connexion et se termine à l\'échéance, même après déconnexion. Vide = illimité',
+              border: OutlineInputBorder(),
+            ),
+            validator: (v) {
+              final t = (v ?? '').trim().toLowerCase();
+              return (t.isNotEmpty && !uptimePattern.hasMatch(t)) ? 'Format invalide (ex. 1h, 1d)' : null;
+            },
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final t in const ['30m', '1h', '3h', '12h', '1d', '3d', '7d', '30d'])
+                ActionChip(
+                  label: Text(t),
+                  onPressed: _busy ? null : () => setState(() => _limit.text = t),
+                ),
+            ],
+          ),
           const SizedBox(height: 16),
           TextFormField(
             controller: _count,

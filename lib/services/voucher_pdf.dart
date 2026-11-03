@@ -26,8 +26,7 @@ Future<Uint8List> buildVouchersPdf(List<Voucher> vouchers, Session session) {
             '&password=${Uri.encodeQueryComponent(v.password)}';
     final info = [
       v.profile,
-      if (v.uptime.isNotEmpty) v.uptime,
-      if (v.validity.isNotEmpty) 'valable ${v.validity}',
+      if (v.uptime.isNotEmpty) 'valable ${v.uptime}',
       if (v.price > 0) formatMoney(v.price, session.currency),
     ].join(' · ');
 

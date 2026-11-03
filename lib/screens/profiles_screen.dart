@@ -78,8 +78,7 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
               return ListTile(
                 title: Text(p.name),
                 subtitle: Text([
-                  if (p.uptime.isNotEmpty) 'Durée ${p.uptime}',
-                  if (p.validity.isNotEmpty) 'Expire après ${p.validity}',
+                  if (p.uptime.isNotEmpty) 'Limite ${p.uptime}',
                   if (p.price > 0) formatMoney(p.price, currency),
                   if (p.rateLimit.isNotEmpty) p.rateLimit,
                   '${p.sharedUsers} appareil(s)',

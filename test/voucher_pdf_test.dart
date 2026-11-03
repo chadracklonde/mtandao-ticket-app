@@ -16,7 +16,6 @@ void main() {
             profile: '24H',
             price: 500,
             uptime: '1d',
-            validity: '7d',
           ),
       ];
 
