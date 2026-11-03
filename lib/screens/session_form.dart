@@ -26,6 +26,7 @@ class _SessionFormState extends State<SessionForm> {
   late final TextEditingController _currency;
   late final TextEditingController _dns;
   late bool _ssl;
+  late bool _verifyCert;
   bool _showPassword = false;
   bool _testing = false;
 
@@ -41,6 +42,7 @@ class _SessionFormState extends State<SessionForm> {
     _currency = TextEditingController(text: s?.currency ?? 'FC');
     _dns = TextEditingController(text: s?.dnsName ?? '');
     _ssl = s?.useSsl ?? false;
+    _verifyCert = s?.verifyCert ?? false;
   }
 
   @override
@@ -63,6 +65,7 @@ class _SessionFormState extends State<SessionForm> {
       host: _host.text.trim(),
       port: int.parse(_port.text.trim()),
       useSsl: _ssl,
+      verifyCert: _ssl && _verifyCert,
       username: _user.text.trim(),
       password: _password.text,
       currency: _currency.text.trim().isEmpty ? 'FC' : _currency.text.trim(),
@@ -79,6 +82,7 @@ class _SessionFormState extends State<SessionForm> {
       host: _host.text.trim(),
       port: int.parse(_port.text.trim()),
       useSsl: _ssl,
+      verifyCertificate: _ssl && _verifyCert,
       username: _user.text.trim(),
       password: _password.text,
       connectTimeout: const Duration(seconds: 6),
@@ -156,6 +160,15 @@ class _SessionFormState extends State<SessionForm> {
                 ),
               ],
             ),
+            if (_ssl)
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Vérifier le certificat'),
+                subtitle: const Text('Refuse les certificats auto-signés (plus sûr, '
+                    'mais le routeur doit avoir un vrai certificat)'),
+                value: _verifyCert,
+                onChanged: (v) => setState(() => _verifyCert = v),
+              ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _user,

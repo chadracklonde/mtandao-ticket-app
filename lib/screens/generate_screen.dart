@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models.dart';
 import '../services/mikhmon_service.dart';
+import '../services/stock_alert.dart';
 import '../util.dart';
 import '../widgets/async_body.dart';
 import 'voucher_list_screen.dart';
@@ -24,9 +25,70 @@ class GenerateScreen extends StatelessWidget {
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
-          children: [_GenerateForm(profiles: profiles, service: service, session: session)],
+          children: [
+            _StockBanner(profiles: profiles, service: service),
+            _GenerateForm(profiles: profiles, service: service, session: session),
+          ],
         );
       },
+    );
+  }
+}
+
+/// Avertit quand le stock de tickets neufs d'un profil est bas.
+class _StockBanner extends StatefulWidget {
+  const _StockBanner({required this.profiles, required this.service});
+
+  final List<HotspotProfile> profiles;
+  final MikhmonService service;
+
+  @override
+  State<_StockBanner> createState() => _StockBannerState();
+}
+
+class _StockBannerState extends State<_StockBanner> {
+  List<LowStock> _low = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _check();
+  }
+
+  Future<void> _check() async {
+    try {
+      final threshold = await StockAlertStore().load();
+      if (threshold <= 0) return;
+      final batches = await widget.service.unusedBatches();
+      final low = lowStock(widget.profiles, batches, threshold);
+      if (mounted) setState(() => _low = low);
+    } catch (_) {
+      // L'alerte est facultative : pas d'erreur affichée.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_low.isEmpty) return const SizedBox.shrink();
+    return Card(
+      color: const Color(0xFFFFF4D1),
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Color(0xFF8A5A00)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Stock bas : ${_low.map((l) => '${l.profile} (${l.left} restant${l.left > 1 ? 's' : ''})').join(', ')}',
+                style: const TextStyle(color: Color(0xFF4D3300)),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

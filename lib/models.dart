@@ -13,6 +13,7 @@ class Session {
     required this.host,
     this.port = 8728,
     this.useSsl = false,
+    this.verifyCert = false,
     required this.username,
     this.password = '',
     this.currency = 'FC',
@@ -24,6 +25,9 @@ class Session {
   final String host;
   final int port;
   final bool useSsl;
+
+  /// Vérifier le certificat SSL du routeur (refuse les certificats auto-signés).
+  final bool verifyCert;
   final String username;
   final String password;
   final String currency;
@@ -37,6 +41,7 @@ class Session {
         'host': host,
         'port': port,
         'useSsl': useSsl,
+        'verifyCert': verifyCert,
         'username': username,
         'currency': currency,
         'dnsName': dnsName,
@@ -49,6 +54,7 @@ class Session {
         host: j['host'] as String,
         port: (j['port'] as num?)?.toInt() ?? 8728,
         useSsl: j['useSsl'] as bool? ?? false,
+        verifyCert: j['verifyCert'] as bool? ?? false,
         username: j['username'] as String? ?? 'admin',
         password: password,
         currency: j['currency'] as String? ?? 'FC',
@@ -206,9 +212,83 @@ class ActiveUser {
       );
 }
 
+/// Utilisateur (ticket) du hotspot, avec sa consommation.
+class HotspotUser {
+  const HotspotUser({
+    required this.id,
+    required this.name,
+    required this.password,
+    required this.profile,
+    required this.comment,
+    required this.disabled,
+    required this.uptime,
+    required this.limitUptime,
+    required this.bytesIn,
+    required this.bytesOut,
+    required this.limitBytes,
+  });
+
+  final String id;
+  final String name;
+  final String password;
+  final String profile;
+  final String comment;
+  final bool disabled;
+
+  /// Temps de connexion consommé et sa limite (null : illimité).
+  final Duration uptime;
+  final Duration? limitUptime;
+
+  /// Données consommées (reçues + envoyées) et leur limite (0 : illimité).
+  final int bytesIn;
+  final int bytesOut;
+  final int limitBytes;
+
+  factory HotspotUser.fromRow(Map<String, String> r) {
+    final lu = parseRouterDuration(r['limit-uptime'] ?? '');
+    return HotspotUser(
+      id: r['.id'] ?? '',
+      name: r['name'] ?? '',
+      password: r['password'] ?? '',
+      profile: r['profile'] ?? 'default',
+      comment: r['comment'] ?? '',
+      disabled: r['disabled'] == 'true' || r['disabled'] == 'yes',
+      uptime: parseRouterDuration(r['uptime'] ?? '') ?? Duration.zero,
+      limitUptime: (lu == null || lu == Duration.zero) ? null : lu,
+      bytesIn: int.tryParse(r['bytes-in'] ?? '') ?? 0,
+      bytesOut: int.tryParse(r['bytes-out'] ?? '') ?? 0,
+      limitBytes: int.tryParse(r['limit-bytes-total'] ?? '') ?? 0,
+    );
+  }
+
+  int get bytesTotal => bytesIn + bytesOut;
+
+  /// Ticket généré par l'application et jamais utilisé.
+  bool get isNew =>
+      (comment.startsWith('vc-') || comment.startsWith('up-')) &&
+      uptime == Duration.zero &&
+      bytesTotal == 0;
+
+  /// Ticket déjà utilisé (première connexion faite, ou consommation non nulle).
+  bool get isUsed => comment.startsWith('used-') || uptime > Duration.zero || bytesTotal > 0;
+
+  /// Temps ou données épuisés.
+  bool get isExhausted =>
+      (limitUptime != null && uptime >= limitUptime!) ||
+      (limitBytes > 0 && bytesTotal >= limitBytes);
+
+  Duration? get timeLeft => limitUptime == null
+      ? null
+      : (limitUptime! > uptime ? limitUptime! - uptime : Duration.zero);
+
+  int? get bytesLeft =>
+      limitBytes <= 0 ? null : (limitBytes > bytesTotal ? limitBytes - bytesTotal : 0);
+}
+
 /// Vente enregistrée par le script on-login du profil.
 class Sale {
   const Sale({
+    this.id = '',
     required this.time,
     required this.user,
     required this.price,
@@ -219,6 +299,8 @@ class Sale {
     required this.comment,
   });
 
+  /// Identifiant du script de vente sur le routeur (pour l'effacer).
+  final String id;
   final DateTime time;
   final String user;
   final int price;
@@ -232,12 +314,13 @@ class Sale {
 
   /// Analyse le nom d'un script de vente :
   /// `date-|-heure-|-user-|-prix-|-ip-|-mac-|-durée-|-profil-|-commentaire`.
-  static Sale? tryParse(String name) {
+  static Sale? tryParse(String name, {String id = ''}) {
     final p = name.split(separator);
     if (p.length < 8) return null;
     final time = parseRouterDateTime(p[0], p[1]);
     if (time == null) return null;
     return Sale(
+      id: id,
       time: time,
       user: p[2],
       price: int.tryParse(p[3]) ?? 0,
@@ -291,4 +374,80 @@ DateTime? parseRouterDateTime(String date, String time) {
   final s = t.length > 2 ? int.tryParse(t[2]) ?? 0 : 0;
   if (h == null || mi == null) return null;
   return DateTime(y, mo, d, h, mi, s);
+}
+
+/// État du routeur (`/system/resource`).
+class RouterResource {
+  const RouterResource({
+    required this.cpuLoad,
+    required this.freeMemory,
+    required this.totalMemory,
+    required this.uptime,
+    required this.version,
+    required this.board,
+  });
+
+  final int cpuLoad;
+  final int freeMemory;
+  final int totalMemory;
+  final String uptime;
+  final String version;
+  final String board;
+
+  int get usedMemory => totalMemory - freeMemory;
+  double get memoryRatio => totalMemory <= 0 ? 0 : usedMemory / totalMemory;
+
+  factory RouterResource.fromRow(Map<String, String> r) => RouterResource(
+        cpuLoad: int.tryParse(r['cpu-load'] ?? '') ?? 0,
+        freeMemory: int.tryParse(r['free-memory'] ?? '') ?? 0,
+        totalMemory: int.tryParse(r['total-memory'] ?? '') ?? 0,
+        uptime: r['uptime'] ?? '',
+        version: r['version'] ?? '',
+        board: r['board-name'] ?? r['platform'] ?? '',
+      );
+}
+
+/// Débit instantané d'une interface, en bits par seconde.
+class TrafficSample {
+  const TrafficSample(this.rx, this.tx);
+  final int rx;
+  final int tx;
+}
+
+/// Ligne du journal du routeur.
+class LogEntry {
+  const LogEntry({required this.time, required this.topics, required this.message});
+  final String time;
+  final String topics;
+  final String message;
+
+  bool get isError => topics.contains('error') || topics.contains('critical');
+  bool get isHotspot => topics.contains('hotspot');
+
+  factory LogEntry.fromRow(Map<String, String> r) =>
+      LogEntry(time: r['time'] ?? '', topics: r['topics'] ?? '', message: r['message'] ?? '');
+}
+
+/// Bail DHCP : un appareil connu du routeur.
+class DhcpLease {
+  const DhcpLease({
+    required this.address,
+    required this.mac,
+    required this.hostName,
+    required this.status,
+    required this.comment,
+  });
+  final String address;
+  final String mac;
+  final String hostName;
+  final String status;
+  final String comment;
+
+  factory DhcpLease.fromRow(Map<String, String> r) => DhcpLease(
+        address: r['address'] ?? '',
+        mac: r['mac-address'] ?? '',
+        hostName: r['host-name'] ?? '',
+        status: r['status'] ?? '',
+        comment: r['comment'] ?? '',
+      );
 }

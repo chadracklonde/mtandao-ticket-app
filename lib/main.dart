@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'screens/sessions_screen.dart';
+import 'widgets/lock_gate.dart';
 
 // Charte : voir docs/identite-visuelle.md
 const _blueSignal = Color(0xFF0F5FD0);
@@ -53,13 +54,15 @@ class MtandaoApp extends StatelessWidget {
       darkTheme: _buildTheme(Brightness.dark),
       // Sur ordinateur (fenêtre large), le contenu garde une largeur de téléphone
       // large, centrée : l'interface reste lisible.
-      builder: (context, child) => ColoredBox(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 760),
-            child: child,
+      builder: (context, child) => LockGate(
+        child: ColoredBox(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 760),
+              child: child,
+            ),
           ),
         ),
       ),

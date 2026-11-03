@@ -103,8 +103,10 @@ void main() {
     expect(find.text('Tickets vendus'), findsOneWidget);
     expect(find.text(formatMoney(500, 'FC')), findsWidgets);
 
-    // Profils
-    await tester.tap(inNav('Profils'));
+    // Plus > Profils
+    await tester.tap(inNav('Plus'));
+    await settle(tester, 5);
+    await tester.tap(find.text('Profils'));
     await settle(tester);
     expect(find.text('24H'), findsWidgets);
 

@@ -7,6 +7,7 @@ import '../services/sales_export.dart';
 import '../services/sales_report.dart';
 import '../util.dart';
 import '../widgets/async_body.dart';
+import '../widgets/sales_chart.dart';
 
 /// Rapport de ventes : jour, mois ou période choisie.
 class SalesScreen extends StatelessWidget {
@@ -19,7 +20,12 @@ class SalesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AsyncBody<List<Sale>>(
       load: service.sales,
-      builder: (context, sales, reload) => SalesReportView(sales: sales, session: session),
+      builder: (context, sales, reload) => SalesReportView(
+        sales: sales,
+        session: session,
+        service: service,
+        onChanged: reload,
+      ),
     );
   }
 }
@@ -27,10 +33,20 @@ class SalesScreen extends StatelessWidget {
 enum ReportMode { day, month, period }
 
 class SalesReportView extends StatefulWidget {
-  const SalesReportView({super.key, required this.sales, required this.session});
+  const SalesReportView({
+    super.key,
+    required this.sales,
+    required this.session,
+    this.service,
+    this.onChanged,
+  });
 
   final List<Sale> sales;
   final Session session;
+
+  /// Nécessaire pour effacer des ventes ; sans lui, le rapport est en lecture seule.
+  final MikhmonService? service;
+  final Future<void> Function()? onChanged;
 
   @override
   State<SalesReportView> createState() => _SalesReportViewState();
@@ -61,6 +77,56 @@ class _SalesReportViewState extends State<SalesReportView> {
         return SalesSummary.of(widget.sales, a, b);
       case ReportMode.period:
         return SalesSummary.of(widget.sales, _period.start, _period.end);
+    }
+  }
+
+  SalesSummary get _previous {
+    switch (_mode) {
+      case ReportMode.day:
+        final p = DateTime(_day.year, _day.month, _day.day - 1);
+        return SalesSummary.of(widget.sales, p, p);
+      case ReportMode.month:
+        final (a, b) = SalesSummary.monthRange(DateTime(_month.year, _month.month - 1));
+        return SalesSummary.of(widget.sales, a, b);
+      case ReportMode.period:
+        final days = _period.end.difference(_period.start).inDays + 1;
+        return SalesSummary.of(
+          widget.sales,
+          _period.start.subtract(Duration(days: days)),
+          _period.start.subtract(const Duration(days: 1)),
+        );
+    }
+  }
+
+  String get _previousLabel => switch (_mode) {
+        ReportMode.day => 'la veille',
+        ReportMode.month => 'le mois précédent',
+        ReportMode.period => 'la période précédente',
+      };
+
+  Future<void> _deleteSales(List<Sale> sales, String what) async {
+    final service = widget.service;
+    if (service == null || sales.isEmpty) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Effacer ces ventes ?'),
+        content: Text('$what sera effacé du rapport. Cette action est définitive ; '
+            'les tickets ne sont pas supprimés.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Effacer')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      final n = await service.deleteSales(sales);
+      if (!mounted) return;
+      showMessage(context, '$n vente(s) effacée(s)');
+      await widget.onChanged?.call();
+    } catch (e) {
+      if (mounted) showMessage(context, describeError(e));
     }
   }
 
@@ -156,7 +222,49 @@ class _SalesReportViewState extends State<SalesReportView> {
         title: Text(s.user),
         subtitle: Text('${formatTime(s.time)} · ${s.profile} · ${s.address}'),
         trailing: Text(formatMoney(s.price, currency)),
+        onLongPress: widget.service == null
+            ? null
+            : () => _deleteSales([s], 'La vente de ${s.user} (${formatMoney(s.price, currency)})'),
       );
+
+  Widget _comparison(BuildContext context, SalesSummary summary, String currency) {
+    final prev = _previous;
+    final pct = SalesSummary.changePercent(summary.total, prev.total);
+    final text = prev.total <= 0
+        ? 'Aucune vente $_previousLabel pour comparer.'
+        : '${pct! >= 0 ? '+' : '−'}${pct.abs().toStringAsFixed(0)} % par rapport à $_previousLabel '
+            '(${formatMoney(prev.total, currency)})';
+    final color = pct == null
+        ? null
+        : (pct >= 0 ? const Color(0xFF17784E) : const Color(0xFFC63D2F));
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Text(text,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color)),
+    );
+  }
+
+  Widget _chart(SalesSummary summary) {
+    final List<int> values;
+    String? Function(int) label;
+    if (_mode == ReportMode.day) {
+      values = summary.perHourTotals();
+      label = (i) => i % 3 == 0 ? '${i}h' : null;
+    } else {
+      values = summary.perDayTotals();
+      final start = summary.start;
+      final step = values.length > 20 ? 5 : 1;
+      label = (i) {
+        final d = DateTime(start.year, start.month, start.day + i);
+        return (i % step == 0) ? '${d.day}' : null;
+      };
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: SalesBarChart(values: values, labelOf: label),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -215,6 +323,10 @@ class _SalesReportViewState extends State<SalesReportView> {
             ),
           ),
         ),
+        if (summary.count > 0) ...[
+          _comparison(context, summary, currency),
+          _chart(summary),
+        ],
         if (summary.count > 0)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -235,6 +347,12 @@ class _SalesReportViewState extends State<SalesReportView> {
                     label: const Text('Exporter Excel'),
                   ),
                 ),
+                if (widget.service != null)
+                  IconButton(
+                    tooltip: 'Effacer ces ventes',
+                    onPressed: () => _deleteSales(summary.sales, 'Les ${summary.count} vente(s) de « $_title »'),
+                    icon: const Icon(Icons.delete_sweep_outlined),
+                  ),
               ],
             ),
           ),

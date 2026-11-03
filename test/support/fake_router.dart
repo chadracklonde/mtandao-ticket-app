@@ -32,6 +32,22 @@ class FakeRouter {
   final List<Map<String, String>> hotspotUsers = [];
   final List<Map<String, String>> active = [];
   final List<Map<String, String>> scripts = [];
+  final List<Map<String, String>> logLines = [];
+  final List<String> savedFiles = [];
+  final List<Map<String, String>> leases = [];
+  Map<String, String> resource = {
+    'cpu-load': '7',
+    'free-memory': '60000000',
+    'total-memory': '128000000',
+    'uptime': '3d4h',
+    'version': '7.15 (stable)',
+    'board-name': 'hAP ac2',
+  };
+  final List<Map<String, String>> interfaces = [
+    {'name': 'ether1', 'running': 'true', 'disabled': 'false'},
+    {'name': 'wlan1', 'running': 'true', 'disabled': 'false'},
+    {'name': 'ether5', 'running': 'false', 'disabled': 'false'},
+  ];
 
   /// Date renvoyée par `/system clock` pour [simulateFirstLogin].
   String clockDate = 'nov/03/2026';
@@ -136,12 +152,47 @@ class FakeRouter {
         ];
       case '/ip/hotspot/user/print':
         return _rows(hotspotUsers);
+      case '/ip/hotspot/user/set':
+        return _update(hotspotUsers, attrs);
+      case '/ip/hotspot/user/reset-counters':
+        {
+          final i = hotspotUsers.indexWhere((u) => u['.id'] == attrs['.id']);
+          if (i < 0) return _trap('no such item (4)');
+          hotspotUsers[i] = {...hotspotUsers[i], 'uptime': '0s', 'bytes-in': '0', 'bytes-out': '0'};
+          return [
+            ['!done']
+          ];
+        }
       case '/ip/hotspot/user/remove':
         return _remove(hotspotUsers, attrs['.id']);
       case '/ip/hotspot/active/print':
         return _rows(active);
       case '/ip/hotspot/active/remove':
         return _remove(active, attrs['.id']);
+      case '/system/backup/save':
+        savedFiles.add('${attrs['name']}.backup');
+        return [
+          ['!done']
+        ];
+      case '/export':
+        savedFiles.add('${attrs['file']}.rsc');
+        return [
+          ['!done']
+        ];
+      case '/system/resource/print':
+        return _rows([resource]);
+      case '/interface/print':
+        return _rows(interfaces);
+      case '/interface/monitor-traffic':
+        return _rows([
+          {'name': attrs['interface'] ?? '', 'rx-bits-per-second': '1500000', 'tx-bits-per-second': '250000'}
+        ]);
+      case '/log/print':
+        return _rows(logLines);
+      case '/ip/dhcp-server/lease/print':
+        return _rows(leases);
+      case '/system/script/remove':
+        return _remove(scripts, attrs['.id']);
       case '/system/script/print':
         return _rows(scripts
             .where((s) => queries.entries.every((q) => s[q.key] == q.value))

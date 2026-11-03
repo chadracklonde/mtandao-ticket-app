@@ -3,6 +3,7 @@ import 'dart:math';
 import '../models.dart';
 import '../routeros/api_client.dart';
 import '../util.dart';
+import 'profile_backup.dart';
 
 enum CodeCharset { digits, lower, mixed }
 
@@ -253,6 +254,140 @@ class MikhmonService {
     }
   }
 
+  /// Efface des ventes du journal du routeur (rapport corrigé ou remis à zéro).
+  /// Les tickets eux-mêmes ne sont pas touchés. Renvoie le nombre de ventes effacées.
+  Future<int> deleteSales(List<Sale> sales) async {
+    var n = 0;
+    for (final s in sales) {
+      if (s.id.isEmpty) continue;
+      await client.run(['/system/script/remove', '=.id=${s.id}']);
+      n++;
+    }
+    return n;
+  }
+
+  // ---- Sauvegarde ------------------------------------------------------------
+
+  Future<String> exportProfiles() async => profilesToJson(await profiles());
+
+  /// Recrée les profils d'une sauvegarde ; ceux qui existent déjà (même nom) sont mis à jour.
+  Future<RestoreResult> restoreProfiles(List<HotspotProfile> wanted) async {
+    final existing = {for (final p in await profiles()) p.name: p};
+    var created = 0;
+    var updated = 0;
+    final failed = <String, String>{};
+    for (final p in wanted) {
+      final old = existing[p.name];
+      try {
+        await saveProfile(HotspotProfile(
+          id: old?.id ?? '',
+          name: p.name,
+          rateLimit: p.rateLimit,
+          sharedUsers: p.sharedUsers,
+          price: p.price,
+          uptime: p.uptime,
+          dataLimit: p.dataLimit,
+        ));
+        old == null ? created++ : updated++;
+      } catch (e) {
+        failed[p.name] = describeError(e);
+      }
+    }
+    return RestoreResult(created, updated, failed);
+  }
+
+  /// Crée sur le routeur une sauvegarde complète (.backup) et un export lisible (.rsc).
+  /// Les fichiers restent sur le routeur (Winbox > Files). Renvoie le nom commun.
+  Future<String> createRouterBackup() async {
+    final now = DateTime.now();
+    final name = 'mtandao-${now.year}${two(now.month)}${two(now.day)}-${two(now.hour)}${two(now.minute)}';
+    await client.run(['/system/backup/save', '=name=$name']);
+    await client.run(['/export', '=file=$name']);
+    return name;
+  }
+
+  // ---- Surveillance du routeur ---------------------------------------------
+
+  Future<RouterResource> resource() async {
+    final rows = await client.run(['/system/resource/print']);
+    if (rows.isEmpty) throw RouterOsException('Le routeur n\'a pas renvoyé son état.');
+    return RouterResource.fromRow(rows.first);
+  }
+
+  /// Interfaces actives (câble, wifi, pont…), pour le trafic en direct.
+  Future<List<String>> interfaces() async {
+    final rows = await client.run(['/interface/print', '=.proplist=name,running,disabled']);
+    return [
+      for (final r in rows)
+        if ((r['disabled'] ?? 'false') != 'true' && (r['running'] ?? 'true') != 'false' && r['name'] != null)
+          r['name']!
+    ];
+  }
+
+  Future<TrafficSample> traffic(String interfaceName) async {
+    final rows = await client.run(['/interface/monitor-traffic', '=interface=$interfaceName', '=once=']);
+    final r = rows.isEmpty ? const <String, String>{} : rows.first;
+    return TrafficSample(
+      int.tryParse(r['rx-bits-per-second'] ?? '') ?? 0,
+      int.tryParse(r['tx-bits-per-second'] ?? '') ?? 0,
+    );
+  }
+
+  /// Dernières lignes du journal (les plus récentes d'abord).
+  Future<List<LogEntry>> logs({int limit = 200}) async {
+    final rows = await client.run(['/log/print', '=.proplist=time,topics,message']);
+    final all = rows.map(LogEntry.fromRow).toList();
+    final tail = all.length > limit ? all.sublist(all.length - limit) : all;
+    return tail.reversed.toList();
+  }
+
+  Future<List<DhcpLease>> dhcpLeases() async {
+    final rows = await client.run(['/ip/dhcp-server/lease/print']);
+    return rows.map(DhcpLease.fromRow).where((l) => l.address.isNotEmpty).toList();
+  }
+
+  // ---- Tous les utilisateurs du hotspot ------------------------------------
+
+  Future<List<HotspotUser>> hotspotUsers() async {
+    final rows = await client.run([
+      '/ip/hotspot/user/print',
+      '=.proplist=.id,name,password,profile,comment,disabled,uptime,limit-uptime,'
+          'bytes-in,bytes-out,limit-bytes-total',
+    ]);
+    final list = rows.map(HotspotUser.fromRow).where((u) => u.name.isNotEmpty).toList();
+    list.sort((a, b) => a.name.compareTo(b.name));
+    return list;
+  }
+
+  Future<void> setUserDisabled(String id, bool disabled) async {
+    await client.run(['/ip/hotspot/user/set', '=.id=$id', '=disabled=${disabled ? 'yes' : 'no'}']);
+  }
+
+  Future<void> resetUserCounters(String id) async {
+    await client.run(['/ip/hotspot/user/reset-counters', '=.id=$id']);
+  }
+
+  Future<void> removeUser(String id) async {
+    await client.run(['/ip/hotspot/user/remove', '=.id=$id']);
+  }
+
+  /// Prolonge un ticket : ajoute du temps et/ou des données à ses limites.
+  /// Un ticket illimité sur un critère n'est pas modifié sur ce critère.
+  Future<void> extendUser(HotspotUser u, {Duration? addTime, int? addBytes}) async {
+    final words = <String>['/ip/hotspot/user/set', '=.id=${u.id}'];
+    if (addTime != null && addTime > Duration.zero && u.limitUptime != null) {
+      words.add('=limit-uptime=${toRouterDuration(u.limitUptime! + addTime)}');
+    }
+    if (addBytes != null && addBytes > 0 && u.limitBytes > 0) {
+      words.add('=limit-bytes-total=${u.limitBytes + addBytes}');
+    }
+    if (words.length == 2) {
+      throw RouterOsException(
+          'Ce ticket n\'a pas de limite à prolonger (temps ou données illimités).');
+    }
+    await client.run(words);
+  }
+
   // ---- Utilisateurs actifs -------------------------------------------------
 
   Future<List<ActiveUser>> activeUsers() async {
@@ -269,11 +404,11 @@ class MikhmonService {
     final rows = await client.run([
       '/system/script/print',
       '?comment=mikhmon',
-      '=.proplist=name',
+      '=.proplist=.id,name',
     ]);
     final out = <Sale>[];
     for (final r in rows) {
-      final s = Sale.tryParse(r['name'] ?? '');
+      final s = Sale.tryParse(r['name'] ?? '', id: r['.id'] ?? '');
       if (s != null) out.add(s);
     }
     out.sort((a, b) => b.time.compareTo(a.time));

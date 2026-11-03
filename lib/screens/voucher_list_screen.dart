@@ -1,9 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 
 import '../models.dart';
 import '../services/file_delivery.dart';
+import '../services/ticket_layout.dart';
 import '../services/voucher_pdf.dart';
 import '../util.dart';
 
@@ -24,9 +27,16 @@ class VoucherListScreen extends StatelessWidget {
   /// Si fourni, affiche un bouton « supprimer le lot ».
   final Future<void> Function()? onDelete;
 
+  /// PDF selon la mise en page choisie dans Plus > Mise en page du ticket.
+  Future<Uint8List> _pdf() async {
+    final layout = await TicketLayoutStore().load();
+    final logo = layout.showLogo ? await loadTicketLogo() : null;
+    return buildVouchersPdf(vouchers, session, layout: layout, logo: logo);
+  }
+
   Future<void> _share(BuildContext context) async {
     try {
-      final bytes = await buildVouchersPdf(vouchers, session);
+      final bytes = await _pdf();
       final clean = session.name.replaceAll(RegExp(r'[^A-Za-z0-9]+'), '-');
       final path = await deliverFile(bytes, 'tickets-$clean.pdf', mimeType: 'application/pdf');
       if (path != null && context.mounted) showMessage(context, 'Enregistré : $path');
@@ -37,7 +47,7 @@ class VoucherListScreen extends StatelessWidget {
 
   Future<void> _print(BuildContext context) async {
     try {
-      final bytes = await buildVouchersPdf(vouchers, session);
+      final bytes = await _pdf();
       await Printing.layoutPdf(onLayout: (_) async => bytes, name: 'Tickets ${session.name}');
     } catch (e) {
       if (context.mounted) showMessage(context, describeError(e));

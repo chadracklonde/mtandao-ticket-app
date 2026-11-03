@@ -65,6 +65,29 @@ class SalesSummary {
     return SalesSummary._(from, to, inRange, days, profiles);
   }
 
+  /// Montants par jour, du premier au dernier jour de la période (zéros compris).
+  List<int> perDayTotals() {
+    final out = <int>[];
+    for (var d = start; !d.isAfter(end); d = DateTime(d.year, d.month, d.day + 1)) {
+      out.add(sales.where((s) => dayOf(s.time) == d).fold<int>(0, (a, s) => a + s.price));
+    }
+    return out;
+  }
+
+  /// Montants par heure (0 à 23), pour une journée.
+  List<int> perHourTotals() {
+    final out = List<int>.filled(24, 0);
+    for (final s in sales) {
+      out[s.time.hour] += s.price;
+    }
+    return out;
+  }
+
+  /// Variation en pourcentage par rapport à [previous] ; null si la période
+  /// précédente n'a aucune vente.
+  static double? changePercent(int current, int previous) =>
+      previous <= 0 ? null : (current - previous) * 100 / previous;
+
   /// Premier et dernier jour du mois de [d].
   static (DateTime, DateTime) monthRange(DateTime d) =>
       (DateTime(d.year, d.month), DateTime(d.year, d.month + 1, 0));

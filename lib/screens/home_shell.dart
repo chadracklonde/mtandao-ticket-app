@@ -4,7 +4,7 @@ import '../models.dart';
 import '../services/mikhmon_service.dart';
 import 'active_screen.dart';
 import 'generate_screen.dart';
-import 'profiles_screen.dart';
+import 'plus_screen.dart';
 import 'sales_screen.dart';
 import 'vouchers_screen.dart';
 
@@ -20,7 +20,7 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
-  static const _titles = ['Générer', 'Lots', 'Actifs', 'Ventes', 'Profils'];
+  static const _titles = ['Générer', 'Lots', 'Actifs', 'Ventes', 'Plus'];
   int _index = 0;
   final Set<int> _visited = {0};
 
@@ -35,7 +35,7 @@ class _HomeShellState extends State<HomeShell> {
       case 3:
         return SalesScreen(service: widget.service, session: widget.session);
       default:
-        return ProfilesScreen(service: widget.service, session: widget.session);
+        return PlusScreen(service: widget.service, session: widget.session);
     }
   }
 
@@ -75,7 +75,7 @@ class _HomeShellState extends State<HomeShell> {
           NavigationDestination(icon: Icon(Icons.inventory_2_outlined), label: 'Lots'),
           NavigationDestination(icon: Icon(Icons.wifi), label: 'Actifs'),
           NavigationDestination(icon: Icon(Icons.bar_chart), label: 'Ventes'),
-          NavigationDestination(icon: Icon(Icons.tune), label: 'Profils'),
+          NavigationDestination(icon: Icon(Icons.more_horiz), label: 'Plus'),
         ],
       ),
     );

@@ -188,6 +188,7 @@ class RouterOsClient {
     required this.useSsl,
     required this.username,
     required this.password,
+    this.verifyCertificate = false,
     this.connectTimeout = const Duration(seconds: 10),
     this.commandTimeout = const Duration(seconds: 30),
   });
@@ -195,6 +196,10 @@ class RouterOsClient {
   final String host;
   final int port;
   final bool useSsl;
+
+  /// Vrai : refuse un certificat non reconnu. Faux (défaut) : accepte les
+  /// certificats auto-signés, courants sur les routeurs.
+  final bool verifyCertificate;
   final String username;
   final String password;
   final Duration connectTimeout;
@@ -217,7 +222,7 @@ class RouterOsClient {
         host,
         port,
         timeout: connectTimeout,
-        onBadCertificate: (_) => true, // certificats auto-signés des routeurs
+        onBadCertificate: (_) => !verifyCertificate,
       );
     } else {
       s = await Socket.connect(host, port, timeout: connectTimeout);

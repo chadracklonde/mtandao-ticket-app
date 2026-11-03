@@ -73,6 +73,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
         host: s.host,
         port: s.port,
         useSsl: s.useSsl,
+        verifyCertificate: s.verifyCert,
         username: s.username,
         password: s.password,
       );
