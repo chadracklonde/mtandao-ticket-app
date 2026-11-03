@@ -10,67 +10,69 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-
-      - name: Version de Flutter
-        run: mkdir -p /tmp/logs && flutter --version 2>&1 | tee /tmp/logs/00-version.txt
-
-      - name: Générer le dossier android
+      - name: Analyse et tests
         run: |
-          flutter create --org cd.xsoftdesign --project-name mtandao_ticket --platforms android .
-          rm -f test/widget_test.dart
-
-      - name: Permission Internet
-        run: |
-          f=android/app/src/main/AndroidManifest.xml
-          grep -q 'android.permission.INTERNET' "$f" && echo "déjà présente" || \
-            sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <application|' "$f"
-          grep -n 'INTERNET' "$f"
-
-      - name: Dépendances
-        run: flutter pub get 2>&1 | tee /tmp/logs/01-pub-get.txt; exit ${PIPESTATUS[0]}
-
-      - name: Icône de l'application
-        run: dart run flutter_launcher_icons 2>&1 | tee /tmp/logs/02-icons.txt; exit ${PIPESTATUS[0]}
-        continue-on-error: true
-
-      - name: Analyse du code
-        run: flutter analyze 2>&1 | tee /tmp/logs/03-analyze.txt; exit ${PIPESTATUS[0]}
-        continue-on-error: true
-
-      - name: Tests
-        run: flutter test 2>&1 | tee /tmp/logs/04-test.txt; exit ${PIPESTATUS[0]}
-        continue-on-error: true
-
-      - name: APK
-        run: flutter build apk --release 2>&1 | tee /tmp/logs/05-apk.txt; exit ${PIPESTATUS[0]}
-
+          mkdir -p /tmp/logs
+          flutter --version 2>&1 | tee /tmp/logs/00-version.txt
+          flutter pub get 2>&1 | tee /tmp/logs/01-pub-get.txt
+          flutter analyze 2>&1 | tee /tmp/logs/03-analyze.txt || true
+          flutter test 2>&1 | tee /tmp/logs/04-test.txt
+          exit ${PIPESTATUS[0]}
       - name: Publier les journaux (branche ci-logs)
         if: always()
         run: |
-          cd /tmp/logs && ls -la
+          rm -rf /tmp/pub && mkdir /tmp/pub && cp /tmp/logs/* /tmp/pub/ && cd /tmp/pub
+          echo "$GITHUB_SHA" > commit.txt
           git config --global user.name 'ci'
           git config --global user.email 'ci@users.noreply.github.com'
-          rm -rf /tmp/pub && mkdir /tmp/pub && cp /tmp/logs/* /tmp/pub/ && cd /tmp/pub
           git init -q && git checkout -q -b ci-logs && git add -A
           git commit -q -m "journaux du $GITHUB_SHA"
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-logs
 
+  apk:
+    # APK : à la demande, ou quand le message du commit contient [apk]
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[apk]')
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Compiler l'APK
+        run: |
+          mkdir -p /tmp/logs
+          flutter create --org cd.xsoftdesign --project-name mtandao_ticket --platforms android .
+          rm -f test/widget_test.dart
+          f=android/app/src/main/AndroidManifest.xml
+          grep -q 'android.permission.INTERNET' "$f" || sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <application|' "$f"
+          flutter pub get
+          dart run flutter_launcher_icons 2>&1 | tee /tmp/logs/02-icons.txt
+          flutter build apk --release 2>&1 | tee /tmp/logs/05-apk.txt
+          exit ${PIPESTATUS[0]}
       - uses: actions/upload-artifact@v4
         with:
           name: mtandao-ticket-apk
-          if-no-files-found: ignore
           path: build/app/outputs/flutter-apk/app-release.apk
+      - name: Publier les journaux (branche ci-logs-apk)
+        if: always()
+        run: |
+          rm -rf /tmp/pub && mkdir /tmp/pub && cp /tmp/logs/* /tmp/pub/ && cd /tmp/pub
+          git config --global user.name 'ci'
+          git config --global user.email 'ci@users.noreply.github.com'
+          git init -q && git checkout -q -b ci-logs-apk && git add -A
+          git commit -q -m "journaux apk du $GITHUB_SHA"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-logs-apk

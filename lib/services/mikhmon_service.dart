@@ -44,12 +44,13 @@ class VoucherBatch {
 
 /// Opérations de haut niveau sur le hotspot (équivalent des écrans de Mikhmon).
 class MikhmonService {
-  MikhmonService(this.client, this.session);
+  MikhmonService(this.client, this.session, {Random? random})
+      : _random = random ?? Random.secure();
 
   final RouterOsClient client;
   final Session session;
 
-  static final Random _random = Random.secure();
+  final Random _random;
 
   // ---- Profils -----------------------------------------------------------
 
@@ -93,7 +94,7 @@ class MikhmonService {
     }
   }
 
-  static String _randomCode(String alphabet, int length) {
+  String _randomCode(String alphabet, int length) {
     final b = StringBuffer();
     for (var i = 0; i < length; i++) {
       b.write(alphabet[_random.nextInt(alphabet.length)]);
@@ -104,6 +105,7 @@ class MikhmonService {
   Future<List<Voucher>> generate(
     GenerateRequest r, {
     void Function(int done, int total)? onProgress,
+    int maxAttempts = 20,
   }) async {
     final now = DateTime.now();
     final batch =
@@ -115,7 +117,7 @@ class MikhmonService {
 
     for (var i = 0; i < r.count; i++) {
       var created = false;
-      for (var attempt = 0; attempt < 8 && !created; attempt++) {
+      for (var attempt = 0; attempt < maxAttempts && !created; attempt++) {
         final name = r.prefix + _randomCode(alphabet, r.length);
         if (used.contains(name)) continue;
         final password = r.separate ? _randomCode(alphabet, r.length) : name;
