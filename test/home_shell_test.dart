@@ -79,11 +79,15 @@ void main() {
 
     // Générer : le profil du routeur est proposé, on crée 3 tickets.
     expect(find.text('Générer les tickets'), findsOneWidget);
-    await tester.enterText(find.byType(TextFormField).first, '3');
+    // Champs : limite de temps (préremplie par le profil), puis nombre de tickets.
+    expect(find.text('1d'), findsWidgets);
+    await tester.enterText(find.byType(TextFormField).at(1), '3');
     await tester.tap(find.text('Générer les tickets'));
     await settle(tester, 40);
     expect(find.text('3 tickets générés'), findsOneWidget);
-    expect(router.hotspotUsers.where((u) => (u['comment'] ?? '').startsWith('vc-')).length, 3);
+    final made = router.hotspotUsers.where((u) => (u['comment'] ?? '').startsWith('vc-'));
+    expect(made.length, 3);
+    expect(made.every((u) => u['limit-uptime'] == '1d'), isTrue);
     await tester.pageBack();
     await settle(tester, 5);
 
