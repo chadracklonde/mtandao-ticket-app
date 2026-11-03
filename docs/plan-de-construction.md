@@ -20,7 +20,21 @@ Méthode de travail depuis le 3 novembre 2026 : chaque lot est écrit, compilé 
 | 4. Suivi | L10 | Utilisateurs actifs et déconnexion d'un client | F14, F15 | Le client apparaît, puis est coupé (T6) | Fait (faux routeur) |
 | 4. Suivi | L11 | Rapports de ventes : jour, mois, période choisie, détail, totaux par profil | F16, F17 | Bornes de période et totaux testés (T8) | Fait |
 | 5. Essais | L12 | Tests automatiques T1 à T9 sur faux routeur, APK de test sur GitHub | — | Tous les tests passent ; APK téléchargeable | Fait |
-| 5. Essais | L13 | **Essai en usage réel (Chadrack)** : routeur réel, RouterOS 6 ou 7, QR, vente, expiration, accès à distance | — | Une semaine d'usage sans erreur bloquante | À faire |
+| 5. Essais | L13 | **Essai en usage réel (Chadrack)** : routeur réel, RouterOS 6 ou 7, QR, vente, expiration, accès à distance | — | Une semaine d'usage sans erreur bloquante | Premier essai réussi (3 nov. 2026) ; usage suivi en cours |
 | 5. Essais | Contrôle | Mise en service | — | Ventes exactes | Après L13 |
 
-Hors V1 (candidats V2) : export des ventes (F18), sauvegarde des réglages. VPN intégré : V3.
+## Phase 6. Compléments (3 nov. 2026)
+
+| Lot | Contenu | État |
+|---|---|---|
+| L14 | Utilisateurs : liste complète, recherche, filtres (neufs, utilisés, épuisés, désactivés), détail de consommation, prolonger, désactiver, remise à zéro, supprimer | Fait (faux routeur) |
+| L15 | Ventes : effacer / annuler, histogramme (par heure ou par jour), comparaison avec la période précédente | Fait (faux routeur) |
+| L16 | Mise en page du ticket : A4 en 2, 3 ou 4 colonnes, rouleau 58 ou 80 mm, logo, titre, texte de bas de ticket, QR facultatif, aperçu | Fait (PDF) ; impression sur rouleau à essayer |
+| L17 | Surveillance : processeur, mémoire, trafic en direct, journal, appareils DHCP | Fait (faux routeur) |
+| L18 | Sauvegarde : profils (fichier JSON) et sauvegarde du routeur (.backup + .rsc) | Fait (faux routeur) |
+| L19 | Verrouillage par code, vérification du certificat SSL, alerte de stock bas | Fait |
+| L20 | Compilation Android, Windows et macOS | En cours |
+
+Limite de temps (démarre à la première connexion), limite de données, vitesse du profil, export des ventes en PDF et Excel, versions Windows et macOS : faits (voir le journal des versions).
+
+Non faits, décidés : langues (français seulement), rôle vendeur et mode vente, impression Bluetooth directe sur imprimante thermique (par le système d'impression uniquement), alertes poussées hors de l'application, empreinte digitale. VPN intégré : V3. Version iPhone et Play Store : plus tard.

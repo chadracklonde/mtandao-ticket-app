@@ -4,7 +4,7 @@ Application Android qui fonctionne comme Mikhmon : elle pilote le hotspot MikroT
 depuis un téléphone, sans serveur PHP ni WinBox. Elle parle directement à l'API RouterOS
 (port 8728, ou 8729 en SSL).
 
-**État du projet : phase Socle.** Le [cahier des charges](docs/cahier-des-charges.md) est validé
+**État du projet : en essai réel, compléments en cours (voir le plan de construction).** Le [cahier des charges](docs/cahier-des-charges.md) est validé
 (3 novembre 2026). Le code ci-dessous est un prototype **jamais compilé ni testé sur un vrai routeur**.
 
 ## Fonctions de la V1
