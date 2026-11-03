@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../models.dart';
 import '../services/mikhmon_service.dart';
+import '../services/sales_export.dart';
 import '../services/sales_report.dart';
 import '../util.dart';
 import '../widgets/async_body.dart';
@@ -70,6 +73,27 @@ class _SalesReportViewState extends State<SalesReportView> {
         return '${monthNames[_month.month - 1]} ${_month.year}';
       case ReportMode.period:
         return 'Du ${formatDate(_period.start)} au ${formatDate(_period.end)}';
+    }
+  }
+
+  Future<void> _export(SalesSummary summary, {required bool excel}) async {
+    try {
+      final name = salesFileName(widget.session, _title);
+      if (excel) {
+        final bytes = buildSalesXlsx(summary, widget.session, _title);
+        await Share.shareXFiles([
+          XFile.fromData(
+            bytes,
+            name: '$name.xlsx',
+            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          ),
+        ]);
+      } else {
+        final bytes = await buildSalesPdf(summary, widget.session, _title);
+        await Printing.sharePdf(bytes: bytes, filename: '$name.pdf');
+      }
+    } catch (e) {
+      if (mounted) showMessage(context, describeError(e));
     }
   }
 
@@ -194,6 +218,29 @@ class _SalesReportViewState extends State<SalesReportView> {
             ),
           ),
         ),
+        if (summary.count > 0)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _export(summary, excel: false),
+                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    label: const Text('Exporter PDF'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _export(summary, excel: true),
+                    icon: const Icon(Icons.table_chart_outlined),
+                    label: const Text('Exporter Excel'),
+                  ),
+                ),
+              ],
+            ),
+          ),
         if (summary.count == 0)
           const Padding(
             padding: EdgeInsets.all(32),
