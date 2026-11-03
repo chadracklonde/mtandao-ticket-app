@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:printing/printing.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../models.dart';
 import '../services/mikhmon_service.dart';
+import '../services/file_delivery.dart';
 import '../services/sales_export.dart';
 import '../services/sales_report.dart';
 import '../util.dart';
@@ -79,19 +78,17 @@ class _SalesReportViewState extends State<SalesReportView> {
   Future<void> _export(SalesSummary summary, {required bool excel}) async {
     try {
       final name = salesFileName(widget.session, _title);
+      final String path;
       if (excel) {
         final bytes = buildSalesXlsx(summary, widget.session, _title);
-        await Share.shareXFiles([
-          XFile.fromData(
-            bytes,
-            name: '$name.xlsx',
-            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          ),
-        ]);
+        path = await deliverFile(bytes, '$name.xlsx',
+                mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ??
+            '';
       } else {
         final bytes = await buildSalesPdf(summary, widget.session, _title);
-        await Printing.sharePdf(bytes: bytes, filename: '$name.pdf');
+        path = await deliverFile(bytes, '$name.pdf', mimeType: 'application/pdf') ?? '';
       }
+      if (mounted && path.isNotEmpty) showMessage(context, 'Enregistré : $path');
     } catch (e) {
       if (mounted) showMessage(context, describeError(e));
     }

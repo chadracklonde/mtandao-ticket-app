@@ -88,3 +88,106 @@ jobs:
           git init -q && git checkout -q -b ci-logs-apk && git add -A
           git commit -q -m "journaux apk du $GITHUB_SHA"
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-logs-apk
+
+  windows:
+    # Windows : quand le message du commit contient [desktop]
+    if: contains(github.event.head_commit.message, '[desktop]')
+    needs: test
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Compiler pour Windows
+        run: |
+          mkdir -p /tmp/logs
+          flutter config --enable-windows-desktop
+          flutter create --org cd.xsoftdesign --project-name mtandao_ticket --platforms windows .
+          rm -f test/widget_test.dart
+          sed -i 's|L"mtandao_ticket"|L"Mtandao Ticket"|' windows/runner/main.cpp
+          flutter pub get
+          dart run flutter_launcher_icons -f flutter_launcher_icons-windows.yaml 2>&1 | tee /tmp/logs/02-icons.txt
+          flutter build windows --release 2>&1 | tee /tmp/logs/05-windows.txt
+          exit ${PIPESTATUS[0]}
+      - name: Archive Windows
+        run: |
+          mkdir -p dist/MtandaoTicket
+          cp -r build/windows/x64/runner/Release/* dist/MtandaoTicket/
+          cd dist && powershell -Command "Compress-Archive -Path MtandaoTicket -DestinationPath ../mtandao-ticket-windows.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mtandao-ticket-windows
+          path: mtandao-ticket-windows.zip
+      - name: Publier (page Releases)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: test-${{ github.run_number }}
+          name: Version de test ${{ github.run_number }}
+          prerelease: true
+          files: mtandao-ticket-windows.zip
+      - name: Publier les journaux (branche ci-logs-windows)
+        if: always()
+        run: |
+          rm -rf /tmp/pub && mkdir /tmp/pub && cp /tmp/logs/* /tmp/pub/ && cd /tmp/pub
+          git config --global user.name 'ci'
+          git config --global user.email 'ci@users.noreply.github.com'
+          git init -q && git checkout -q -b ci-logs-windows && git add -A
+          git commit -q -m "journaux windows du $GITHUB_SHA"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-logs-windows
+
+  macos:
+    # macOS : quand le message du commit contient [desktop] (après Windows, pour ne pas créer la page Releases en double)
+    if: ${{ !cancelled() && contains(github.event.head_commit.message, '[desktop]') && needs.test.result == 'success' }}
+    needs: [test, windows]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Compiler pour macOS
+        run: |
+          mkdir -p /tmp/logs
+          flutter config --enable-macos-desktop
+          flutter create --org cd.xsoftdesign --project-name mtandao_ticket --platforms macos .
+          rm -f test/widget_test.dart
+          # Application distribuée hors App Store : pas de bac à sable (accès réseau et dossier Documents)
+          for f in macos/Runner/DebugProfile.entitlements macos/Runner/Release.entitlements; do
+            /usr/libexec/PlistBuddy -c "Set :com.apple.security.app-sandbox false" "$f"
+          done
+          sed -i '' 's|PRODUCT_NAME = mtandao_ticket|PRODUCT_NAME = Mtandao Ticket|' macos/Runner/Configs/AppInfo.xcconfig
+          flutter pub get
+          dart run flutter_launcher_icons -f flutter_launcher_icons-macos.yaml 2>&1 | tee /tmp/logs/02-icons.txt
+          flutter build macos --release 2>&1 | tee /tmp/logs/05-macos.txt
+          exit ${PIPESTATUS[0]}
+      - name: Archive macOS
+        run: |
+          app=$(find build/macos/Build/Products/Release -maxdepth 1 -name "*.app" | head -1)
+          echo "application : $app"
+          ditto -c -k --sequesterRsrc --keepParent "$app" mtandao-ticket-macos.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mtandao-ticket-macos
+          path: mtandao-ticket-macos.zip
+      - name: Publier (page Releases)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: test-${{ github.run_number }}
+          name: Version de test ${{ github.run_number }}
+          prerelease: true
+          files: mtandao-ticket-macos.zip
+      - name: Publier les journaux (branche ci-logs-macos)
+        if: always()
+        run: |
+          rm -rf /tmp/pub && mkdir /tmp/pub && cp /tmp/logs/* /tmp/pub/ && cd /tmp/pub
+          git config --global user.name 'ci'
+          git config --global user.email 'ci@users.noreply.github.com'
+          git init -q && git checkout -q -b ci-logs-macos && git add -A
+          git commit -q -m "journaux macos du $GITHUB_SHA"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-logs-macos

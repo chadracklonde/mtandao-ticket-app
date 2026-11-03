@@ -51,6 +51,18 @@ class MtandaoApp extends StatelessWidget {
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       theme: _buildTheme(Brightness.light),
       darkTheme: _buildTheme(Brightness.dark),
+      // Sur ordinateur (fenêtre large), le contenu garde une largeur de téléphone
+      // large, centrée : l'interface reste lisible.
+      builder: (context, child) => ColoredBox(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: child,
+          ),
+        ),
+      ),
       home: const SessionsScreen(),
     );
   }

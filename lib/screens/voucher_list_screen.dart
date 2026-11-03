@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 
 import '../models.dart';
+import '../services/file_delivery.dart';
 import '../services/voucher_pdf.dart';
 import '../util.dart';
 
@@ -26,7 +27,9 @@ class VoucherListScreen extends StatelessWidget {
   Future<void> _share(BuildContext context) async {
     try {
       final bytes = await buildVouchersPdf(vouchers, session);
-      await Printing.sharePdf(bytes: bytes, filename: 'tickets-${session.name}.pdf');
+      final clean = session.name.replaceAll(RegExp(r'[^A-Za-z0-9]+'), '-');
+      final path = await deliverFile(bytes, 'tickets-$clean.pdf', mimeType: 'application/pdf');
+      if (path != null && context.mounted) showMessage(context, 'Enregistré : $path');
     } catch (e) {
       if (context.mounted) showMessage(context, describeError(e));
     }
