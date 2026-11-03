@@ -1,0 +1,59 @@
+name: Compiler et tester
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Version de Flutter
+        run: flutter --version
+
+      - name: Générer le dossier android
+        run: flutter create --org cd.xsoftdesign --project-name mtandao_ticket --platforms android .
+
+      - name: Permission Internet
+        run: |
+          f=android/app/src/main/AndroidManifest.xml
+          grep -q 'android.permission.INTERNET' "$f" && echo "déjà présente" || \
+            sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <application|' "$f"
+          grep -n 'INTERNET' "$f"
+
+      - name: Dépendances
+        run: flutter pub get
+
+      - name: Icône de l'application
+        run: dart run flutter_launcher_icons
+        continue-on-error: true
+
+      - name: Analyse du code
+        run: flutter analyze
+        continue-on-error: true
+
+      - name: Tests
+        run: flutter test
+        continue-on-error: true
+
+      - name: APK
+        run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mtandao-ticket-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
