@@ -23,7 +23,7 @@ String salesFileName(Session session, String periodTitle) {
 /// puis liste détaillée.
 Future<Uint8List> buildSalesPdf(SalesSummary s, Session session, String periodTitle) {
   final c = session.currency;
-  final doc = pw.Document(title: 'Ventes ${session.name} — $periodTitle');
+  final doc = pw.Document(title: 'Ventes ${session.name} - $periodTitle');
 
   pw.Widget heading(String t) => pw.Padding(
         padding: const pw.EdgeInsets.only(top: 14, bottom: 4),
@@ -51,7 +51,7 @@ Future<Uint8List> buildSalesPdf(SalesSummary s, Session session, String periodTi
         pw.Text('Rapport de ventes',
             style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 2),
-        pw.Text('${session.name} — $periodTitle', style: const pw.TextStyle(fontSize: 11)),
+        pw.Text('${session.name} - $periodTitle', style: const pw.TextStyle(fontSize: 11)),
         pw.SizedBox(height: 10),
         pw.Row(children: [
           pw.Expanded(
