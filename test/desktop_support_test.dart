@@ -6,8 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   test('dossier d\'enregistrement sur ordinateur', () {
-    expect(desktopExportDir({'USERPROFILE': r'C:\\Users\\chad'}, windows: true),
-        r'C:\\Users\\chad\\Documents\\Mtandao Ticket');
+    expect(desktopExportDir({'USERPROFILE': 'C:\\Users\\chad'}, windows: true),
+        'C:\\Users\\chad\\Documents\\Mtandao Ticket');
     expect(desktopExportDir({'HOME': '/Users/chad'}, windows: false),
         '/Users/chad/Documents/Mtandao Ticket');
   });
