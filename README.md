@@ -93,3 +93,8 @@ lib/services/voucher_pdf.dart    PDF des tickets
 lib/screens/                     écrans
 test/                            tests du codec, des ventes et des profils
 ```
+
+## APK de test
+
+Dernier APK de test : https://github.com/chadracklonde/mtandao-ticket-app/releases/tag/test-14
+(construit par GitHub Actions quand le message d'un commit contient `[apk]`).
