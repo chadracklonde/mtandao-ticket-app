@@ -59,8 +59,8 @@ Huit modules, 21 exigences. « Indispensable » = nécessaire pour la V1 ; « So
 | F13 | Lots | Retrouver les lots de tickets non utilisés, les réimprimer, les supprimer | Indispensable |
 | F14 | Actifs | Lister les connectés : utilisateur, adresse IP, MAC, durée, données échangées | Indispensable |
 | F15 | Actifs | Déconnecter un client | Indispensable |
-| F16 | Ventes | Rapport par mois, avec total encaissé et nombre de tickets | Indispensable |
-| F17 | Ventes | Détail d'une journée : heure, ticket, profil, prix | Indispensable |
+| F16 | Ventes | Rapport du jour, du mois ou d'une période choisie (dates de début et de fin), avec total encaissé en FC et nombre de tickets | Indispensable |
+| F17 | Ventes | Détail des ventes de la période : date, heure, ticket, profil, prix | Indispensable |
 | F18 | Ventes | Exporter les ventes (CSV ou PDF) | Souhaité |
 | F19 | Profils | Expiration en jours calendaires depuis la première connexion | Indispensable |
 | F20 | Mode vente | Importer un PDF de tickets, afficher un ticket à la fois, marquer vendu, compteur | Abandonné (pas de fusion) |
@@ -133,7 +133,7 @@ flowchart LR
   R["Routeurs : choisir un routeur"] --> G["Onglet Générer"] --> G2["Tickets créés, PDF"]
   R --> L["Onglet Lots"] --> L2["Lot : PDF, suppression"]
   R --> A["Onglet Actifs"] --> A2["Déconnexion d'un client"]
-  R --> V["Onglet Ventes"] --> V2["Ventes d'une journée"]
+  R --> V["Onglet Ventes"] --> V2["Jour, mois ou période"]
   R --> P["Onglet Profils"] --> P2["Formulaire de profil"]
 ```
 
@@ -166,7 +166,7 @@ La V1 est acceptée quand ces huit tests passent sur le vrai routeur, avec un t�
 | T5 | PDF d'un lot imprimé et QR code scanné | Le QR ouvre la page de connexion avec le bon ticket (F10, F11) |
 | T6 | Connexion d'un client avec un ticket | Il apparaît dans « Actifs » ; « Déconnecter » le coupe (F14, F15) |
 | T7 | Même ticket utilisé deux fois | Une seule vente enregistrée (F16) |
-| T8 | Rapport du mois comparé aux tickets vendus | Total et nombre de tickets identiques, sur RouterOS 6 et 7 si les deux sont disponibles (F16, F17) |
+| T8 | Rapport du jour, du mois et d'une période choisie comparé aux tickets vendus | Total et nombre de tickets identiques, sur RouterOS 6 et 7 si les deux sont disponibles (F16, F17) |
 
 ## 11. Risques et questions ouvertes
 
