@@ -62,7 +62,7 @@ jobs:
           sed -i 's|android:label="mtandao_ticket"|android:label="Mtandao Ticket"|' "$f"
           grep -n 'android:label' "$f"
           flutter pub get
-          dart run flutter_launcher_icons 2>&1 | tee /tmp/logs/02-icons.txt
+          dart run flutter_launcher_icons -f pubspec.yaml 2>&1 | tee /tmp/logs/02-icons.txt
           flutter build apk --release 2>&1 | tee /tmp/logs/05-apk.txt
           exit ${PIPESTATUS[0]}
       - name: Nommer l'APK
