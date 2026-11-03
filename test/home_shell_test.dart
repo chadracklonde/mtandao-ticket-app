@@ -97,6 +97,8 @@ void main() {
     await tester.tap(inNav('Ventes'));
     await settle(tester, 60);
     expect(find.text('Tickets vendus'), findsOneWidget);
+    final seen = tester.widgetList<Text>(find.byType(Text)).map((t) => t.data).toList();
+    expect(find.text('500 FC'), findsWidgets, reason: 'textes affichés : $seen');
     expect(find.text('500 FC'), findsWidgets);
 
     // Profils
