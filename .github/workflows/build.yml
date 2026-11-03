@@ -29,7 +29,8 @@ jobs:
         run: mkdir -p /tmp/logs && flutter --version 2>&1 | tee /tmp/logs/00-version.txt
 
       - name: Générer le dossier android
-        run: flutter create --org cd.xsoftdesign --project-name mtandao_ticket --platforms android .
+        run: |
+          flutter create --org cd.xsoftdesign --project-name mtandao_ticket --platforms android .
           rm -f test/widget_test.dart
 
       - name: Permission Internet
