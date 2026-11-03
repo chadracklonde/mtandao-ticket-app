@@ -66,6 +66,7 @@ class HotspotProfile {
     this.sharedUsers = 1,
     this.price = 0,
     this.uptime = '',
+    this.dataLimit = '',
   });
 
   final String id;
@@ -78,8 +79,12 @@ class HotspotProfile {
   /// génération. Elle démarre à la première connexion du ticket.
   final String uptime;
 
+  /// Limite de données par défaut (ex. `500M`, `1G`), proposée à la génération.
+  /// Vide : illimitée.
+  final String dataLimit;
+
   static final RegExp _meta =
-      RegExp(r'#mkm:price=(\d*);uptime=([0-9a-z]*)');
+      RegExp(r'#mkm:price=(\d*);uptime=([0-9a-z]*)(?:;data=([0-9a-zA-Z.]*))?');
 
   factory HotspotProfile.fromRow(Map<String, String> r) {
     final m = _meta.firstMatch(r['on-login'] ?? '');
@@ -90,6 +95,7 @@ class HotspotProfile {
       sharedUsers: int.tryParse(r['shared-users'] ?? '') ?? 1,
       price: int.tryParse(m?.group(1) ?? '') ?? 0,
       uptime: m?.group(2) ?? '',
+      dataLimit: m?.group(3) ?? '',
     );
   }
 
@@ -107,8 +113,9 @@ class HotspotProfile {
   String buildOnLogin() {
     assert(safeNamePattern.hasMatch(name));
     assert(uptime.isEmpty || uptimePattern.hasMatch(uptime));
+    assert(dataLimit.isEmpty || dataPattern.hasMatch(dataLimit));
     final lines = <String>[
-      '#mkm:price=$price;uptime=$uptime',
+      '#mkm:price=$price;uptime=$uptime${dataLimit.isEmpty ? '' : ';data=$dataLimit'}',
       r':local d [/system clock get date]',
       r':local t [/system clock get time]',
       r':local a [:tostr $address]',
@@ -148,6 +155,7 @@ class Voucher {
     this.comment = '',
     this.price = 0,
     this.uptime = '',
+    this.dataLimit = '',
   });
 
   final String id;
@@ -157,6 +165,9 @@ class Voucher {
   final String comment;
   final int price;
   final String uptime;
+
+  /// Libellé de la limite de données (ex. `1 Go`). Vide : illimitée.
+  final String dataLimit;
 
   /// Vrai si le ticket a un identifiant ET un mot de passe distincts.
   bool get separate => password != name;

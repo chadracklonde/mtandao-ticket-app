@@ -47,6 +47,7 @@ class _GenerateFormState extends State<_GenerateForm> {
   final _count = TextEditingController(text: '10');
   final _prefix = TextEditingController();
   final _limit = TextEditingController();
+  final _data = TextEditingController();
   String? _limitFor;
   String? _profileName;
   int _length = 6;
@@ -61,6 +62,7 @@ class _GenerateFormState extends State<_GenerateForm> {
     _count.dispose();
     _prefix.dispose();
     _limit.dispose();
+    _data.dispose();
     super.dispose();
   }
 
@@ -91,6 +93,7 @@ class _GenerateFormState extends State<_GenerateForm> {
           separate: _separate,
           charset: _charset,
           timeLimit: _limit.text.trim().toLowerCase(),
+          dataLimit: _data.text.trim().toUpperCase(),
         ),
         onProgress: (d, t) {
           if (mounted) setState(() => _done = d);
@@ -120,6 +123,7 @@ class _GenerateFormState extends State<_GenerateForm> {
     if (profile != null && _limitFor != profile.name) {
       _limitFor = profile.name;
       _limit.text = profile.uptime;
+      _data.text = profile.dataLimit;
     }
     return Form(
       key: _formKey,
@@ -141,7 +145,7 @@ class _GenerateFormState extends State<_GenerateForm> {
               child: Text(
                 [
                   if (profile.price > 0) formatMoney(profile.price, currency),
-                  if (profile.rateLimit.isNotEmpty) 'Débit ${profile.rateLimit}',
+                  if (profile.rateLimit.isNotEmpty) 'Vitesse ${profile.rateLimit}',
                   '${profile.sharedUsers} appareil(s)',
                 ].join(' · '),
                 style: Theme.of(context).textTheme.bodySmall,
@@ -171,6 +175,33 @@ class _GenerateFormState extends State<_GenerateForm> {
                 ActionChip(
                   label: Text(t),
                   onPressed: _busy ? null : () => setState(() => _limit.text = t),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _data,
+            enabled: !_busy,
+            autocorrect: false,
+            decoration: const InputDecoration(
+              labelText: 'Limite de données',
+              helperText: 'Envoyées + reçues par ticket : 500M, 1G, 2G… Vide = illimitée. '
+                  'La vitesse se règle dans le profil.',
+              border: OutlineInputBorder(),
+            ),
+            validator: (v) {
+              final t = (v ?? '').trim();
+              return (t.isNotEmpty && parseDataSize(t) == null) ? 'Format invalide (ex. 500M, 1G)' : null;
+            },
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final t in const ['100M', '500M', '1G', '2G', '5G'])
+                ActionChip(
+                  label: Text(t),
+                  onPressed: _busy ? null : () => setState(() => _data.text = t),
                 ),
             ],
           ),

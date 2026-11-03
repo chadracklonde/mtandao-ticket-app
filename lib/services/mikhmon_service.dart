@@ -16,6 +16,7 @@ class GenerateRequest {
     this.separate = false,
     this.charset = CodeCharset.digits,
     this.timeLimit,
+    this.dataLimit,
   });
 
   final HotspotProfile profile;
@@ -30,6 +31,14 @@ class GenerateRequest {
   /// Limite de temps des tickets (ex. `1h`, `1d`), qui démarre à la première
   /// connexion. Null : celle du profil. Vide : illimitée.
   final String? timeLimit;
+
+  /// Limite de données par ticket (ex. `500M`, `1G`), envoyées + reçues.
+  /// Null : celle du profil. Vide : illimitée.
+  final String? dataLimit;
+
+  String get effectiveDataLimit => (dataLimit ?? profile.dataLimit).trim();
+
+  int? get dataLimitBytes => parseDataSize(effectiveDataLimit);
 
   String get effectiveTimeLimit => (timeLimit ?? profile.uptime).trim().toLowerCase();
 }
@@ -85,6 +94,9 @@ class MikhmonService {
     if (p.uptime.isNotEmpty && !uptimePattern.hasMatch(p.uptime)) {
       throw RouterOsException('Durée invalide. Exemples : 30m, 1h, 24h, 7d.');
     }
+    if (p.dataLimit.isNotEmpty && parseDataSize(p.dataLimit) == null) {
+      throw RouterOsException('Limite de données invalide. Exemples : 500M, 1G, 2G.');
+    }
     final words = [
       if (p.id.isEmpty) '/ip/hotspot/user/profile/add' else '/ip/hotspot/user/profile/set',
       if (p.id.isNotEmpty) '=.id=${p.id}',
@@ -112,6 +124,11 @@ class MikhmonService {
     }
   }
 
+  static String _dataLabel(String? bytes) {
+    final n = int.tryParse(bytes ?? '');
+    return (n == null || n <= 0) ? '' : dataLimitLabel(n);
+  }
+
   String _randomCode(String alphabet, int length) {
     final b = StringBuffer();
     for (var i = 0; i < length; i++) {
@@ -125,6 +142,9 @@ class MikhmonService {
     void Function(int done, int total)? onProgress,
     int maxAttempts = 20,
   }) async {
+    if (r.effectiveDataLimit.isNotEmpty && r.dataLimitBytes == null) {
+      throw RouterOsException('Limite de données invalide. Exemples : 500M, 1G, 2G.');
+    }
     final now = DateTime.now();
     final batch =
         '${two(now.day)}${two(now.month)}${two(now.year % 100)}-${two(now.hour)}${two(now.minute)}';
@@ -165,6 +185,7 @@ class MikhmonService {
             '=profile=${r.profile.name}',
             '=comment=$comment',
             if (r.effectiveTimeLimit.isNotEmpty) '=limit-uptime=${r.effectiveTimeLimit}',
+            if (r.dataLimitBytes != null) '=limit-bytes-total=${r.dataLimitBytes}',
           ]);
           used.add(name);
           out.add(Voucher(
@@ -175,6 +196,7 @@ class MikhmonService {
             comment: comment,
             price: r.profile.price,
             uptime: r.effectiveTimeLimit,
+            dataLimit: r.dataLimitBytes == null ? '' : dataLimitLabel(r.dataLimitBytes!),
           ));
           created = true;
         } on RouterOsException catch (e) {
@@ -196,7 +218,7 @@ class MikhmonService {
     final byName = {for (final p in profileList) p.name: p};
     final rows = await client.run([
       '/ip/hotspot/user/print',
-      '=.proplist=.id,name,password,profile,comment,limit-uptime',
+      '=.proplist=.id,name,password,profile,comment,limit-uptime,limit-bytes-total',
     ]);
     final groups = <String, List<Voucher>>{};
     for (final r in rows) {
@@ -212,6 +234,7 @@ class MikhmonService {
         comment: comment,
         price: p?.price ?? 0,
         uptime: r['limit-uptime'] ?? p?.uptime ?? '',
+        dataLimit: _dataLabel(r['limit-bytes-total']),
       );
       groups.putIfAbsent('$comment|$profileName', () => []).add(v);
     }

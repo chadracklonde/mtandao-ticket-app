@@ -81,6 +81,42 @@ void main() {
       expect(t.router.hotspotUsers.last.containsKey('limit-uptime'), isFalse);
     });
 
+    test('limite de données et vitesse (F20)', () async {
+      final t = await setUpService();
+      await t.service.saveProfile(const HotspotProfile(
+          name: 'Go', price: 1000, uptime: '1d', rateLimit: '1M/2M', dataLimit: '1G'));
+      final profile = (await t.service.profiles()).single;
+      expect(profile.dataLimit, '1G');
+      expect(profile.rateLimit, '1M/2M');
+      expect(t.router.profiles.single['rate-limit'], '1M/2M');
+      // Par défaut : celle du profil (1G = 1073741824 octets).
+      final a = (await t.service.generate(GenerateRequest(profile: profile, count: 1))).single;
+      expect(t.router.hotspotUsers.last['limit-bytes-total'], '1073741824');
+      expect(a.dataLimit, '1 Go');
+      // Choix propre au lot.
+      final b = (await t.service.generate(
+              GenerateRequest(profile: profile, count: 1, dataLimit: '500M')))
+          .single;
+      expect(t.router.hotspotUsers.last['limit-bytes-total'], '524288000');
+      expect(b.dataLimit, '500 Mo');
+      // Illimité.
+      await t.service.generate(GenerateRequest(profile: profile, count: 1, dataLimit: ''));
+      expect(t.router.hotspotUsers.last.containsKey('limit-bytes-total'), isFalse);
+      // Relu dans les lots.
+      final batches = await t.service.unusedBatches();
+      final labels = batches.expand((x) => x.vouchers).map((v) => v.dataLimit).toSet();
+      expect(labels, containsAll(['1 Go', '500 Mo', '']));
+      // Format invalide refusé, avant toute création.
+      final before = t.router.hotspotUsers.length;
+      await expectLater(
+          t.service.generate(GenerateRequest(profile: profile, count: 1, dataLimit: 'beaucoup')),
+          throwsA(isA<RouterOsException>()));
+      expect(t.router.hotspotUsers.length, before);
+      await expectLater(
+          t.service.saveProfile(const HotspotProfile(name: 'x', dataLimit: '12')),
+          throwsA(isA<RouterOsException>()));
+    });
+
     test('suppression', () async {
       final t = await setUpService();
       await t.service.saveProfile(day);

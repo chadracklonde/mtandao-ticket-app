@@ -21,6 +21,7 @@ L'icône de l'app se génère avec `dart run flutter_launcher_icons`.
 | --- | --- | --- |
 | Encre | `#0E2A47` | Texte, barre d'application, fonds sombres |
 | Bleu signal | `#0F5FD0` | Boutons, liens, onglet actif |
+| Rouge logo | `#D7263D` | Logo et icône de l'app (fond de l'icône), arcs `#A81428` |
 | Ciel | `#9CC3F5` | Accents doux sur fond sombre |
 | Ambre | `#F5B301` | Le point du signal (logo uniquement) |
 | Connecté | `#17784E` | Client actif, routeur joignable |

@@ -99,6 +99,7 @@ class VoucherListScreen extends StatelessWidget {
             subtitle: Text([
               v.profile,
               if (v.uptime.isNotEmpty) v.uptime,
+              if (v.dataLimit.isNotEmpty) v.dataLimit,
               if (v.price > 0) formatMoney(v.price, session.currency),
             ].join(' · ')),
             onTap: () {

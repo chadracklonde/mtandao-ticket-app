@@ -79,8 +79,9 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
                 title: Text(p.name),
                 subtitle: Text([
                   if (p.uptime.isNotEmpty) 'Limite ${p.uptime}',
+                  if (p.dataLimit.isNotEmpty) 'Données ${p.dataLimit}',
                   if (p.price > 0) formatMoney(p.price, currency),
-                  if (p.rateLimit.isNotEmpty) p.rateLimit,
+                  if (p.rateLimit.isNotEmpty) 'Débit ${p.rateLimit}',
                   '${p.sharedUsers} appareil(s)',
                 ].join(' · ')),
                 onTap: () => _edit(p),

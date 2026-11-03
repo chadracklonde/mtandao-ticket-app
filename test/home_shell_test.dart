@@ -79,9 +79,9 @@ void main() {
 
     // Générer : le profil du routeur est proposé, on crée 3 tickets.
     expect(find.text('Générer les tickets'), findsOneWidget);
-    // Champs : limite de temps (préremplie par le profil), puis nombre de tickets.
+    // Champs : limite de temps (préremplie par le profil), données, puis nombre de tickets.
     expect(find.text('1d'), findsWidgets);
-    await tester.enterText(find.byType(TextFormField).at(1), '3');
+    await tester.enterText(find.byType(TextFormField).at(2), '3');
     await tester.tap(find.text('Générer les tickets'));
     await settle(tester, 40);
     expect(find.text('3 tickets générés'), findsOneWidget);

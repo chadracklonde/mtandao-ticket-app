@@ -45,6 +45,30 @@ String formatMoney(int value, String currency) {
   return '${value < 0 ? '-' : ''}$buf $currency';
 }
 
+/// Taille de données saisie par l'utilisateur : `500M`, `1G`, `1.5G`, `100k`.
+final RegExp dataPattern = RegExp(r'^[0-9]+(\.[0-9]+)?[kKmMgG]$');
+
+/// Convertit `500M` / `1G` en octets (base 1024, comme RouterOS). Null si invalide.
+int? parseDataSize(String text) {
+  final t = text.trim();
+  if (!dataPattern.hasMatch(t)) return null;
+  final n = double.parse(t.substring(0, t.length - 1));
+  final unit = t[t.length - 1].toLowerCase();
+  final mult = unit == 'g' ? 1073741824 : (unit == 'm' ? 1048576 : 1024);
+  final bytes = (n * mult).round();
+  return bytes > 0 ? bytes : null;
+}
+
+/// Libellé lisible d'une limite de données : `500 Mo`, `1 Go`, `1.5 Go`.
+String dataLimitLabel(int bytes) {
+  String fmt(double v, String u) =>
+      '${v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1)} $u';
+  if (bytes >= 1073741824) return fmt(bytes / 1073741824, 'Go');
+  if (bytes >= 1048576) return fmt(bytes / 1048576, 'Mo');
+  if (bytes >= 1024) return fmt(bytes / 1024, 'Ko');
+  return '$bytes o';
+}
+
 String formatBytes(int bytes) {
   const units = ['o', 'Ko', 'Mo', 'Go', 'To'];
   var v = bytes.toDouble();
