@@ -153,6 +153,8 @@ Cinq phases, avec trois points de contrôle. Aucune date n'est fixée : elles so
 
 Les phases Socle et Suivi ne démarrent qu'une fois le point de contrôle précédent passé ; le prototype existant sert de point de départ pour le Socle.
 
+Le découpage en lots est dans le [plan de construction](plan-de-construction.md).
+
 ## 10. Critères d'acceptation et tests
 
 La V1 est acceptée quand ces huit tests passent sur le vrai routeur, avec un téléphone en wifi local puis via le VPN.
