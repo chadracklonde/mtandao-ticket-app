@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../models.dart';
+import '../routeros/api_client.dart';
 import '../services/session_store.dart';
+import '../util.dart';
 
 /// Ajout / modification d'un routeur.
 class SessionForm extends StatefulWidget {
@@ -25,6 +27,7 @@ class _SessionFormState extends State<SessionForm> {
   late final TextEditingController _dns;
   late bool _ssl;
   bool _showPassword = false;
+  bool _testing = false;
 
   @override
   void initState() {
@@ -67,6 +70,28 @@ class _SessionFormState extends State<SessionForm> {
     );
     await widget.store.save(s);
     if (mounted) Navigator.of(context).pop(true);
+  }
+
+  Future<void> _test() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _testing = true);
+    final client = RouterOsClient(
+      host: _host.text.trim(),
+      port: int.parse(_port.text.trim()),
+      useSsl: _ssl,
+      username: _user.text.trim(),
+      password: _password.text,
+      connectTimeout: const Duration(seconds: 6),
+    );
+    try {
+      await client.connect();
+      if (mounted) showMessage(context, 'Connexion réussie.');
+    } catch (e) {
+      if (mounted) showMessage(context, describeError(e));
+    } finally {
+      client.close();
+      if (mounted) setState(() => _testing = false);
+    }
   }
 
   String? _required(String? v) => (v == null || v.trim().isEmpty) ? 'Champ obligatoire' : null;
@@ -177,6 +202,14 @@ class _SessionFormState extends State<SessionForm> {
               ),
             ),
             const SizedBox(height: 24),
+            OutlinedButton.icon(
+              onPressed: _testing ? null : _test,
+              icon: _testing
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.wifi_tethering),
+              label: const Text('Tester la connexion'),
+            ),
+            const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: _save,
               icon: const Icon(Icons.save),

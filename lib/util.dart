@@ -17,7 +17,8 @@ String describeError(Object e) {
   if (e is SocketException) {
     final detail = e.osError?.message ?? e.message;
     return 'Impossible de joindre le routeur ($detail). '
-        'Vérifiez l\'adresse, le port, le Wi-Fi ou le VPN.';
+        'Connectez-vous au wifi du routeur, ou ouvrez Back to Home pour un accès à distance. '
+        'Vérifiez aussi l\'adresse et le port.';
   }
   return e.toString();
 }

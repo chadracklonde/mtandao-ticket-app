@@ -66,6 +66,7 @@ class HotspotProfile {
     this.sharedUsers = 1,
     this.price = 0,
     this.uptime = '',
+    this.validity = '',
   });
 
   final String id;
@@ -77,7 +78,12 @@ class HotspotProfile {
   /// Durée de connexion au format RouterOS (ex. `1h`, `24h`, `7d`).
   final String uptime;
 
-  static final RegExp _meta = RegExp(r'#mkm:price=(\d*);uptime=([0-9a-z]*)');
+  /// Validité en temps calendaire à partir de la première connexion
+  /// (ex. `7d`, `30d`). Vide : pas d'expiration calendaire.
+  final String validity;
+
+  static final RegExp _meta =
+      RegExp(r'#mkm:price=(\d*);uptime=([0-9a-z]*)(?:;validity=([0-9a-z]*))?');
 
   factory HotspotProfile.fromRow(Map<String, String> r) {
     final m = _meta.firstMatch(r['on-login'] ?? '');
@@ -88,28 +94,49 @@ class HotspotProfile {
       sharedUsers: int.tryParse(r['shared-users'] ?? '') ?? 1,
       price: int.tryParse(m?.group(1) ?? '') ?? 0,
       uptime: m?.group(2) ?? '',
+      validity: m?.group(3) ?? '',
     );
   }
 
   /// Script exécuté par le routeur à la première connexion d'un ticket :
-  /// il enregistre la vente dans `/system script` puis marque le ticket
-  /// comme utilisé.
+  /// il enregistre la vente dans `/system script`, marque le ticket comme
+  /// utilisé et, si le profil a une validité, programme son expiration.
+  ///
+  /// Expiration : un planificateur `mkm-e-<ticket>` démarre 2 secondes après
+  /// la première connexion, puis se répète à chaque [validity]. Son premier
+  /// passage « arme » un marqueur (`mkm-a-<ticket>`), le second, une validité
+  /// plus tard, supprime le ticket, sa session et le planificateur.
   String buildOnLogin() {
     assert(safeNamePattern.hasMatch(name));
     assert(uptime.isEmpty || uptimePattern.hasMatch(uptime));
-    return '#mkm:price=$price;uptime=$uptime\n'
-        ':local d [/system clock get date]\n'
-        ':local t [/system clock get time]\n'
-        ':local a [:tostr \$address]\n'
-        ':local m [:tostr \$"mac-address"]\n'
-        ':local c [/ip hotspot user get [find where name=\$user] comment]\n'
-        ':if ([:len \$c] > 3) do={\n'
-        ':local p [:pick \$c 0 3]\n'
-        ':if (\$p = "vc-" or \$p = "up-") do={\n'
-        '/system script add name=([:tostr \$d] . "-|-" . [:tostr \$t] . "-|-" . \$user . "-|-$price-|-" . \$a . "-|-" . \$m . "-|-$uptime-|-$name-|-" . \$c) owner="mkm" source=[:tostr \$d] comment=mikhmon\n'
-        '/ip hotspot user set [find where name=\$user] comment=("used-" . \$c)\n'
-        '}\n'
-        '}\n';
+    assert(validity.isEmpty || uptimePattern.hasMatch(validity));
+    final lines = <String>[
+      '#mkm:price=$price;uptime=$uptime;validity=$validity',
+      r':local d [/system clock get date]',
+      r':local t [/system clock get time]',
+      r':local a [:tostr $address]',
+      r':local m [:tostr $"mac-address"]',
+      r':local c [/ip hotspot user get [find where name=$user] comment]',
+      r':if ([:len $c] > 3) do={',
+      r':local p [:pick $c 0 3]',
+      r':if ($p = "vc-" or $p = "up-") do={',
+      r'/system script add name=([:tostr $d] . "-|-" . [:tostr $t] . "-|-" . $user . "-|-' +
+          '$price' +
+          r'-|-" . $a . "-|-" . $m . "-|-' +
+          '$uptime-|-$name' +
+          r'-|-" . $c) owner="mkm" source=[:tostr $d] comment=mikhmon',
+      r'/ip hotspot user set [find where name=$user] comment=("used-" . $c)',
+      if (validity.isNotEmpty) ...[
+        r':local ev (":if ([:len [/system script find where name=\"mkm-a-" . $user . "\"]] = 0) do={/system script add name=\"mkm-a-" . $user . "\" source=armed comment=mkm-a} else={/ip hotspot active remove [find where user=\"" . $user . "\"]; /ip hotspot user remove [find where name=\"" . $user . "\"]; /system script remove [find where name=\"mkm-a-" . $user . "\"]; /system scheduler remove [find where name=\"mkm-e-" . $user . "\"]}")',
+        r':local st $t',
+        r':do {:set st ([/system clock get time] + 00:00:02)} on-error={}',
+        ':do {/system scheduler add name=("mkm-e-" . \$user) interval=$validity start-date=\$d start-time=\$st on-event=\$ev comment=mikhmon-exp} '
+            'on-error={/system scheduler add name=("mkm-e-" . \$user) interval=$validity start-date=\$d start-time=\$t on-event=\$ev comment=mikhmon-exp}',
+      ],
+      '}',
+      '}',
+    ];
+    return '${lines.join('\n')}\n';
   }
 }
 
@@ -123,6 +150,7 @@ class Voucher {
     this.comment = '',
     this.price = 0,
     this.uptime = '',
+    this.validity = '',
   });
 
   final String id;
@@ -132,6 +160,7 @@ class Voucher {
   final String comment;
   final int price;
   final String uptime;
+  final String validity;
 
   /// Vrai si le ticket a un identifiant ET un mot de passe distincts.
   bool get separate => password != name;

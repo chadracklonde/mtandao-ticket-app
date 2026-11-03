@@ -133,6 +133,7 @@ class _GenerateFormState extends State<_GenerateForm> {
               child: Text(
                 [
                   if (profile.uptime.isNotEmpty) 'Durée ${profile.uptime}',
+                  if (profile.validity.isNotEmpty) 'Expire après ${profile.validity}',
                   if (profile.price > 0) formatMoney(profile.price, currency),
                   if (profile.rateLimit.isNotEmpty) 'Débit ${profile.rateLimit}',
                   '${profile.sharedUsers} appareil(s)',

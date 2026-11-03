@@ -27,6 +27,7 @@ Future<Uint8List> buildVouchersPdf(List<Voucher> vouchers, Session session) {
     final info = [
       v.profile,
       if (v.uptime.isNotEmpty) v.uptime,
+      if (v.validity.isNotEmpty) 'valable ${v.validity}',
       if (v.price > 0) formatMoney(v.price, session.currency),
     ].join(' · ');
 

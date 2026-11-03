@@ -61,6 +61,19 @@ void main() {
           throwsA(isA<RouterOsException>()));
     });
 
+    test('validité calendaire enregistrée et relue (F19)', () async {
+      final t = await setUpService();
+      await t.service.saveProfile(const HotspotProfile(name: '7J', price: 3000, validity: '7d'));
+      final back = (await t.service.profiles()).single;
+      expect(back.validity, '7d');
+      expect(t.router.profiles.single['on-login'], contains('interval=7d'));
+      final v = (await t.service.generate(GenerateRequest(profile: back, count: 1))).single;
+      expect(v.validity, '7d');
+      await expectLater(
+          t.service.saveProfile(const HotspotProfile(name: 'x', validity: '7 jours')),
+          throwsA(isA<RouterOsException>()));
+    });
+
     test('suppression', () async {
       final t = await setUpService();
       await t.service.saveProfile(day);

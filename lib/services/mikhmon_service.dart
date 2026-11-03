@@ -67,6 +67,9 @@ class MikhmonService {
     if (p.uptime.isNotEmpty && !uptimePattern.hasMatch(p.uptime)) {
       throw RouterOsException('Durée invalide. Exemples : 30m, 1h, 24h, 7d.');
     }
+    if (p.validity.isNotEmpty && !uptimePattern.hasMatch(p.validity)) {
+      throw RouterOsException('Validité invalide. Exemples : 1d, 7d, 30d.');
+    }
     final words = [
       if (p.id.isEmpty) '/ip/hotspot/user/profile/add' else '/ip/hotspot/user/profile/set',
       if (p.id.isNotEmpty) '=.id=${p.id}',
@@ -139,6 +142,7 @@ class MikhmonService {
             comment: comment,
             price: r.profile.price,
             uptime: r.profile.uptime,
+            validity: r.profile.validity,
           ));
           created = true;
         } on RouterOsException catch (e) {
@@ -177,6 +181,7 @@ class MikhmonService {
         comment: comment,
         price: p?.price ?? 0,
         uptime: p?.uptime ?? '',
+        validity: p?.validity ?? '',
       );
       groups.putIfAbsent('$comment|$profileName', () => []).add(v);
     }

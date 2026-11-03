@@ -28,6 +28,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   late final TextEditingController _shared;
   late final TextEditingController _price;
   late final TextEditingController _uptime;
+  late final TextEditingController _validity;
   bool _busy = false;
 
   @override
@@ -39,6 +40,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     _shared = TextEditingController(text: '${p?.sharedUsers ?? 1}');
     _price = TextEditingController(text: p == null || p.price == 0 ? '' : '${p.price}');
     _uptime = TextEditingController(text: p?.uptime ?? '');
+    _validity = TextEditingController(text: p?.validity ?? '');
   }
 
   @override
@@ -48,6 +50,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     _shared.dispose();
     _price.dispose();
     _uptime.dispose();
+    _validity.dispose();
     super.dispose();
   }
 
@@ -62,6 +65,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
         sharedUsers: int.parse(_shared.text.trim()),
         price: int.tryParse(_price.text.trim()) ?? 0,
         uptime: _uptime.text.trim().toLowerCase(),
+        validity: _validity.text.trim().toLowerCase(),
       ));
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
@@ -110,6 +114,22 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
               validator: (v) {
                 final t = (v ?? '').trim().toLowerCase();
                 return (t.isNotEmpty && !uptimePattern.hasMatch(t)) ? 'Format invalide (ex. 24h)' : null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _validity,
+              enabled: !_busy,
+              autocorrect: false,
+              decoration: const InputDecoration(
+                labelText: 'Expiration après la 1re connexion (facultatif)',
+                helperText: 'Ex. 1d, 7d, 30d. Le ticket est supprimé à cette échéance, même '
+                    's\'il reste du temps de connexion. Vide = pas d\'expiration',
+                border: OutlineInputBorder(),
+              ),
+              validator: (v) {
+                final t = (v ?? '').trim().toLowerCase();
+                return (t.isNotEmpty && !uptimePattern.hasMatch(t)) ? 'Format invalide (ex. 7d)' : null;
               },
             ),
             const SizedBox(height: 16),
