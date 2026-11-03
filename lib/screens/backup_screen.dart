@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
 import '../models.dart';
@@ -45,14 +45,15 @@ class _BackupScreenState extends State<BackupScreen> {
       });
 
   Future<void> _restoreProfiles() => _guard(() async {
-        final picked = await FilePicker.platform.pickFiles(
-          type: FileType.custom,
-          allowedExtensions: const ['json'],
-          withData: true,
+        const jsonType = XTypeGroup(
+          label: 'Sauvegarde de profils',
+          extensions: ['json'],
+          mimeTypes: ['application/json'],
+          uniformTypeIdentifiers: ['public.json'],
         );
-        if (picked == null || picked.files.isEmpty) return;
-        final bytes = picked.files.first.bytes;
-        if (bytes == null) throw const FormatException('Fichier illisible.');
+        final picked = await openFile(acceptedTypeGroups: const [jsonType]);
+        if (picked == null) return;
+        final bytes = await picked.readAsBytes();
         final profiles = profilesFromJson(utf8.decode(bytes));
         if (profiles.isEmpty) {
           if (mounted) showMessage(context, 'Cette sauvegarde ne contient aucun profil.');
