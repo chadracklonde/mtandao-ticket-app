@@ -114,15 +114,16 @@ Choix techniques du prototype, à confirmer :
 
 ## 7. Conventions sur le routeur
 
-L'application ne garde aucune base de données : l'état vit dans le routeur, grâce à cinq conventions. Elles doivent être testées sur le vrai routeur avant la V1 (voir section 11).
+L'application ne garde aucune base de données : l'état vit dans le routeur, grâce à six conventions. Elles doivent être testées sur le vrai routeur avant la V1 (voir section 11).
 
 | Élément | Convention | Rôle |
 | --- | --- | --- |
-| Profil hotspot | Première ligne du script on-login : `#mkm:price=<prix>;uptime=<durée>` | L'application relit le prix et la durée du profil |
+| Profil hotspot | Première ligne du script on-login : `#mkm:price=<prix>;uptime=<durée>;validity=<validité>` | L'application relit le prix, la durée et la validité du profil |
 | Ticket non utilisé | Commentaire `vc-<jjmmaa>-<hhmm>` (code unique) ou `up-…` (utilisateur et mot de passe) | Regroupe les tickets en lots ; distingue les tickets neufs |
 | Durée | Champ `limit-uptime` posé sur chaque utilisateur à la création | Le routeur coupe le ticket quand la durée est consommée |
 | Vente | À la 1re connexion, le script ajoute un `/system script` avec le commentaire `mikhmon` et le nom `date-\|-heure-\|-ticket-\|-prix-\|-ip-\|-mac-\|-durée-\|-profil-\|-lot` | Source du rapport de ventes |
 | Ticket utilisé | Le même script renomme le commentaire en `used-…` | Empêche de compter deux fois la même vente |
+| Expiration (F19) | Si le profil a une validité : à la 1re connexion, le script crée un planificateur `mkm-e-<ticket>` (début 2 s après, répété à chaque validité). Son 1er passage crée un marqueur `mkm-a-<ticket>` ; le 2e, une validité plus tard, supprime le ticket, sa session, le marqueur et le planificateur | Le ticket s'arrête une validité (ex. 7 jours) après sa 1re connexion, même s'il reste du temps de connexion |
 
 ## 8. Écrans et navigation
 
@@ -169,15 +170,17 @@ La V1 est acceptée quand ces huit tests passent sur le vrai routeur, avec un t�
 | T6 | Connexion d'un client avec un ticket | Il apparaît dans « Actifs » ; « Déconnecter » le coupe (F14, F15) |
 | T7 | Même ticket utilisé deux fois | Une seule vente enregistrée (F16) |
 | T8 | Rapport du jour, du mois et d'une période choisie comparé aux tickets vendus | Total et nombre de tickets identiques, sur RouterOS 6 et 7 si les deux sont disponibles (F16, F17) |
+| T9 | Profil avec une validité de 2 minutes, ticket utilisé une fois | Le ticket disparaît après 2 minutes environ (pas 4), le marqueur et le planificateur aussi (F19) |
 
 ## 11. Risques et questions ouvertes
 
-Le risque principal : le script de vente n'a jamais tourné sur le routeur réel, et le prototype n'a pas encore été compilé.
+Le risque principal : les scripts du routeur (vente et expiration) n'ont jamais tourné sur un vrai routeur. Le prototype compile et ses tests passent (faux routeur), mais un faux routeur n'exécute pas les scripts.
 
 | Risque | Conséquence | Parade |
 | --- | --- | --- |
 | Script on-login non validé sur le vrai routeur | Ventes non comptées ou comptées deux fois | Test T7 et point de contrôle « 1re vente comptée » avant toute mise en service |
-| Prototype jamais compilé | Erreurs de compilation, retards | Compiler et lancer l'analyse statique dès la phase Socle |
+| Prototype jamais compilé | Erreurs de compilation, retards | Réduit : compilation, analyse et tests tournent sur GitHub à chaque envoi |
+| Expiration par planificateur non validée sur le routeur réel | Ticket qui vit deux fois trop longtemps, ou qui n'expire pas | Premier passage décalé de 2 s (pas de comportement ambigu au démarrage) ; test T9 avec une validité de 2 minutes |
 | Formats de date différents entre RouterOS 6 et 7 | Rapport faux ou vide | Lecture des deux formats ; test T8 sur la version réelle |
 | Le VPN Back to Home n'autorise pas l'API | Accès à distance impossible | Vérifier la liste d'adresses autorisées du service `api` |
 | Profils créés hors de l'application (WinBox, Mikhmon) | Leurs ventes ne sont pas comptées | Les ré-enregistrer depuis l'onglet Profils |
