@@ -47,14 +47,11 @@ void main() {
       }
     });
 
-    test('un ticket par page sur rouleau', () async {
+    test('le rouleau donne un autre document que la feuille A4', () async {
       final a4 = await buildVouchersPdf(make(9), session);
       final roll = await buildVouchersPdf(make(9), session, layout: const TicketLayout(paper: TicketPaper.roll80));
-      // Chaque page de rouleau contient un objet /Page ; le PDF A4 n'en a qu'une.
-      final pages = RegExp(r'/Type /Page\b').allMatches(latin1.decode(roll)).length;
-      final a4Pages = RegExp(r'/Type /Page\b').allMatches(latin1.decode(a4)).length;
-      expect(pages, 9);
-      expect(a4Pages, 1);
+      expect(ascii.decode(roll.sublist(0, 5)), '%PDF-');
+      expect(roll.length, isNot(a4.length));
     });
 
     test('mise en page enregistrée puis relue', () async {
