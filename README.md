@@ -50,6 +50,7 @@ mettez `minSdk = 23` si ce n'est pas déjà le cas.
 
 ```bash
 flutter pub get
+dart run flutter_launcher_icons   # icône de l'app (logo A)
 flutter analyze
 flutter test
 flutter run                 # téléphone branché en USB
