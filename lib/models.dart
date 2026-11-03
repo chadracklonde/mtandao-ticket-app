@@ -120,10 +120,10 @@ class HotspotProfile {
       r':if ([:len $c] > 3) do={',
       r':local p [:pick $c 0 3]',
       r':if ($p = "vc-" or $p = "up-") do={',
-      r'/system script add name=([:tostr $d] . "-|-" . [:tostr $t] . "-|-" . $user . "-|-' +
-          '$price' +
-          r'-|-" . $a . "-|-" . $m . "-|-' +
-          '$uptime-|-$name' +
+      r'/system script add name=([:tostr $d] . "-|-" . [:tostr $t] . "-|-" . $user . "-|-'
+          '$price'
+          r'-|-" . $a . "-|-" . $m . "-|-'
+          '$uptime-|-$name'
           r'-|-" . $c) owner="mkm" source=[:tostr $d] comment=mikhmon',
       r'/ip hotspot user set [find where name=$user] comment=("used-" . $c)',
       if (validity.isNotEmpty) ...[
