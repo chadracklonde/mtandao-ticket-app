@@ -76,10 +76,10 @@ Les cibles chiffrées sont des propositions à valider.
 | Sécurité | Noms de profils, durées et débits validés avant d'être insérés dans un script RouterOS (aucune injection possible) |
 | Sécurité | API jamais ouverte côté WAN ; utilisateur dédié sur le routeur recommandé plutôt que « admin » |
 | Confidentialité | Aucune donnée de client ni de vente envoyée à un serveur tiers : tout reste entre le téléphone et le routeur |
-| Réseau | Fonctionne en wifi local et via le VPN Back to Home ; reconnexion automatique après une coupure ou une veille |
+| Réseau | Deux modes d'accès : à distance si Back to Home est installé et connecté sur le téléphone (routeur en RouterOS 7.11 ou plus) ; sinon, uniquement connecté au wifi du routeur, comme Mikhmon. L'application ne dépend pas de Back to Home et affiche un message clair si le routeur est injoignable ; reconnexion automatique après une coupure ou une veille |
 | Hors connexion | Les routeurs enregistrés restent consultables sans réseau ; toute action sur le hotspot exige que le routeur soit joignable |
 | Performance | Cible : lot de 100 tickets créé en moins de 60 secondes en wifi local ; rapport de ventes affiché en moins de 5 secondes |
-| Compatibilité | Android 6.0 (API 23) ou plus ; RouterOS 6 (y compris avant 6.43) et RouterOS 7 |
+| Compatibilité | Android 6.0 (API 23) ou plus ; toutes versions de RouterOS : 6 (y compris avant 6.43) et 7 ; seul l'accès à distance exige une version compatible avec Back to Home |
 | Ergonomie | Interface en français, utilisable d'une main sur téléphone, thème clair et sombre |
 | Fiabilité | Une erreur au milieu d'un lot ne perd aucun ticket déjà créé : il reste visible dans « Lots » |
 
@@ -188,7 +188,7 @@ Questions ouvertes — les réponses fixent la V1 :
 - [ ] Faut-il fusionner avec l'application de vente de tickets (import de PDF, un ticket à la fois, compteur de vendus) ou garder deux applications ? Décidé le 2 novembre 2026 : pas de fusion, deux applications séparées.
 - [ ] Format d'impression : feuille A4 en 3 colonnes, ou petits tickets pour une imprimante thermique ? Décidé le 2 novembre 2026 : feuille A4.
 - [ ] Devise des prix : FC, USD, ou les deux ? Décidé le 2 novembre 2026 : FC uniquement.
-- [ ] Modèle du routeur et version de RouterOS (6 ou 7) ?
+- [x] Modèle du routeur et version de RouterOS (6 ou 7) ? Décidé le 3 novembre 2026 : l'application fonctionne avec toute version ; l'accès à distance dépend de la compatibilité Back to Home, sinon wifi local.
 
 ## 12. Évolution prévue : VPN intégré (V3)
 
