@@ -1,4 +1,4 @@
-/// Modèles de données de l'application.
+// Modèles de données de l'application.
 
 final RegExp safeNamePattern = RegExp(r'^[A-Za-z0-9 _.\-]+$');
 final RegExp uptimePattern = RegExp(r'^([0-9]+[wdhms])+$');

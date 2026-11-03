@@ -30,6 +30,7 @@ jobs:
 
       - name: Générer le dossier android
         run: flutter create --org cd.xsoftdesign --project-name mtandao_ticket --platforms android .
+          rm -f test/widget_test.dart
 
       - name: Permission Internet
         run: |

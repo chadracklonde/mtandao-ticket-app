@@ -73,7 +73,7 @@ void main() {
 
   group('profil', () {
     test('lecture du prix et de la durée', () {
-      final p = HotspotProfile(name: '24H', price: 500, uptime: '1d');
+      const p = HotspotProfile(name: '24H', price: 500, uptime: '1d');
       final back = HotspotProfile.fromRow({
         '.id': '*1',
         'name': '24H',

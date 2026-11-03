@@ -41,7 +41,7 @@ Future<Uint8List> buildVouchersPdf(List<Voucher> vouchers, Session session) {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text(session.name,
-              style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
+              style: const pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 4),
           pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
