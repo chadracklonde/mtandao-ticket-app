@@ -1,6 +1,8 @@
 // Modèles de données de l'application.
 
 final RegExp safeNamePattern = RegExp(r'^[A-Za-z0-9 _.\-]+$');
+/// Taille de données saisie : `500M`, `1G`, `1.5G`, `100k`.
+final RegExp dataPattern = RegExp(r'^[0-9]+(\.[0-9]+)?[kKmMgG]$');
 final RegExp uptimePattern = RegExp(r'^([0-9]+[wdhms])+$');
 
 /// Connexion enregistrée vers un routeur MikroTik.

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'models.dart';
 import 'routeros/api_client.dart';
 
 /// Message d'erreur lisible pour l'utilisateur.
@@ -44,9 +45,6 @@ String formatMoney(int value, String currency) {
   }
   return '${value < 0 ? '-' : ''}$buf $currency';
 }
-
-/// Taille de données saisie par l'utilisateur : `500M`, `1G`, `1.5G`, `100k`.
-final RegExp dataPattern = RegExp(r'^[0-9]+(\.[0-9]+)?[kKmMgG]$');
 
 /// Convertit `500M` / `1G` en octets (base 1024, comme RouterOS). Null si invalide.
 int? parseDataSize(String text) {
