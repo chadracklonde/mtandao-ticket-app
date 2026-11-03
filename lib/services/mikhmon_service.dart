@@ -27,6 +27,17 @@ class GenerateRequest {
   final CodeCharset charset;
 }
 
+/// La génération s'est arrêtée en cours de route (réseau coupé, routeur
+/// éteint…). Les tickets déjà créés existent sur le routeur.
+class GenerationInterrupted extends RouterOsException {
+  GenerationInterrupted(this.created, this.requested, String cause)
+      : super('${created.length} ticket(s) sur $requested créés avant l\'arrêt : '
+            'retrouvez-les dans l\'onglet Lots. $cause');
+
+  final List<Voucher> created;
+  final int requested;
+}
+
 /// Lot de tickets non utilisés (même date de génération et même profil).
 class VoucherBatch {
   VoucherBatch({required this.comment, required this.profile, required this.vouchers});
@@ -118,6 +129,24 @@ class MikhmonService {
     final used = <String>{};
     final out = <Voucher>[];
 
+    try {
+      await _generateInto(r, out, used, alphabet, comment, onProgress, maxAttempts);
+    } catch (e) {
+      if (out.isEmpty) rethrow;
+      throw GenerationInterrupted(out, r.count, describeError(e));
+    }
+    return out;
+  }
+
+  Future<void> _generateInto(
+    GenerateRequest r,
+    List<Voucher> out,
+    Set<String> used,
+    String alphabet,
+    String comment,
+    void Function(int done, int total)? onProgress,
+    int maxAttempts,
+  ) async {
     for (var i = 0; i < r.count; i++) {
       var created = false;
       for (var attempt = 0; attempt < maxAttempts && !created; attempt++) {
@@ -156,7 +185,6 @@ class MikhmonService {
       }
       onProgress?.call(i + 1, r.count);
     }
-    return out;
   }
 
   /// Tickets jamais utilisés, regroupés par lot.

@@ -153,7 +153,9 @@ void main() {
             if (done == 5) t.router.stop();
           },
         ),
-        throwsA(anything),
+        throwsA(isA<GenerationInterrupted>()
+            .having((e) => e.created.length, 'créés', greaterThanOrEqualTo(5))
+            .having((e) => e.message, 'message', contains('onglet Lots'))),
       );
       expect(t.router.hotspotUsers.length, greaterThanOrEqualTo(5));
       expect(t.router.hotspotUsers.length, lessThan(20));
