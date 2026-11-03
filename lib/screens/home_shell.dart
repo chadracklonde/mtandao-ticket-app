@@ -48,7 +48,12 @@ class _HomeShellState extends State<HomeShell> {
           preferredSize: const Size.fromHeight(20),
           child: Padding(
             padding: const EdgeInsets.only(bottom: 6),
-            child: Text(_titles[_index], style: Theme.of(context).textTheme.labelLarge),
+            child: Text(
+              _titles[_index],
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: Theme.of(context).appBarTheme.foregroundColor,
+                  ),
+            ),
           ),
         ),
       ),

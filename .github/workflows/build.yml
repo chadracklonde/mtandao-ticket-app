@@ -59,14 +59,26 @@ jobs:
           rm -f test/widget_test.dart
           f=android/app/src/main/AndroidManifest.xml
           grep -q 'android.permission.INTERNET' "$f" || sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <application|' "$f"
+          sed -i 's|android:label="mtandao_ticket"|android:label="Mtandao Ticket"|' "$f"
+          grep -n 'android:label' "$f"
           flutter pub get
           dart run flutter_launcher_icons 2>&1 | tee /tmp/logs/02-icons.txt
           flutter build apk --release 2>&1 | tee /tmp/logs/05-apk.txt
           exit ${PIPESTATUS[0]}
+      - name: Nommer l'APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk mtandao-ticket-test.apk
       - uses: actions/upload-artifact@v4
         with:
           name: mtandao-ticket-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: mtandao-ticket-test.apk
+      - name: Publier l'APK (page Releases, téléchargeable depuis le téléphone)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: test-${{ github.run_number }}
+          name: Version de test ${{ github.run_number }}
+          prerelease: true
+          body: "APK de test de Mtandao Ticket (signé avec une clé de test). Installer sur Android en autorisant les sources inconnues."
+          files: mtandao-ticket-test.apk
       - name: Publier les journaux (branche ci-logs-apk)
         if: always()
         run: |
