@@ -3,6 +3,7 @@ import 'dart:math';
 import '../models.dart';
 import '../routeros/api_client.dart';
 import '../util.dart';
+import 'hotspot_setup.dart';
 import 'profile_backup.dart';
 
 enum CodeCharset { digits, lower, mixed }
@@ -579,5 +580,93 @@ class MikhmonService {
   /// Libère un ticket lié à un appareil (il pourra se lier à un autre).
   Future<void> unbindUser(String id) async {
     await client.run(['/ip/hotspot/user/set', '=.id=$id', '=mac-address=00:00:00:00:00:00']);
+  }
+
+  // ---- Installation d'un nouveau hotspot ----------------------------------------
+
+  static const _installLog = 'mkm-install';
+
+  /// Nom, version et interfaces du routeur, pour préparer l'installation.
+  Future<RouterFacts> routerFacts() async {
+    Future<List<Map<String, String>>> q(List<String> w) async {
+      try {
+        return await client.run(w);
+      } on RouterOsException {
+        return const [];
+      }
+    }
+
+    final ifaces = await client.run(['/interface/print', '=.proplist=name']);
+    final nat = await q(['/ip/firewall/nat/print', '?action=masquerade', '=.proplist=.id']);
+    final log = await q(['/system/script/print', '?name=$_installLog', '=.proplist=.id']);
+    return RouterFacts(
+      interfaces: [for (final r in ifaces) if ((r['name'] ?? '').isNotEmpty) r['name']!],
+      hotspots: await q(['/ip/hotspot/print', '=.proplist=name,interface']),
+      addresses: await q(['/ip/address/print', '=.proplist=address,interface']),
+      dhcpServers: await q(['/ip/dhcp-server/print', '=.proplist=name,interface,address-pool']),
+      hasMasquerade: nat.isNotEmpty,
+      services: await q(['/ip/service/print', '=.proplist=.id,name,disabled']),
+      users: await q(['/user/print', '=.proplist=name']),
+      hasInstallLog: log.isNotEmpty,
+    );
+  }
+
+  /// Applique les étapes. En cas de refus du routeur, retire ce qui vient
+  /// d'être créé et relance l'erreur. Les éléments créés sont notés dans un
+  /// script du routeur pour pouvoir annuler l'installation plus tard.
+  Future<void> runSetup(List<SetupStep> steps, {void Function(int done, int total)? onProgress}) async {
+    final created = <String>[];
+    var done = 0;
+    try {
+      for (final step in steps) {
+        String? id;
+        if (step.profile != null) {
+          final before = (await profiles()).map((p) => p.name).toSet();
+          await saveProfile(step.profile!);
+          final p = (await profiles()).where((x) => x.name == step.profile!.name && !before.contains(x.name));
+          id = p.isEmpty ? null : p.first.id;
+        } else {
+          final reply = await client.exec(step.words);
+          id = reply.done['ret'];
+        }
+        if (step.undoPath != null && id != null && id.isNotEmpty) created.add('${step.undoPath}|$id');
+        done++;
+        onProgress?.call(done, steps.length);
+      }
+    } catch (e) {
+      await _undo(created);
+      throw RouterOsException(
+          'L\'installation s\'est arrêtée à l\'étape ${done + 1} sur ${steps.length} : '
+          '${describeError(e)} Ce qui avait été créé a été retiré.');
+    }
+    if (created.isNotEmpty) {
+      await client.run([
+        '/system/script/add',
+        '=name=$_installLog',
+        '=source=${created.join('\n')}',
+        '=comment=mkm',
+      ]);
+    }
+  }
+
+  Future<void> _undo(List<String> created) async {
+    for (final line in created.reversed) {
+      final i = line.indexOf('|');
+      if (i < 0) continue;
+      try {
+        await client.run([line.substring(0, i), '=.id=${line.substring(i + 1)}']);
+      } on RouterOsException {
+        // Déjà supprimé : on continue.
+      }
+    }
+  }
+
+  /// Annule la dernière installation faite par l'application.
+  Future<void> undoInstall() async {
+    final rows = await client.run(['/system/script/print', '?name=$_installLog', '=.proplist=.id,source']);
+    if (rows.isEmpty) throw RouterOsException('Aucune installation à annuler sur ce routeur.');
+    final lines = (rows.first['source'] ?? '').split('\n').where((l) => l.contains('|')).toList();
+    await _undo(lines);
+    await client.run(['/system/script/remove', '=.id=${rows.first['.id']}']);
   }
 }

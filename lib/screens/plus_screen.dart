@@ -8,6 +8,7 @@ import 'backup_screen.dart';
 import 'cash_screen.dart';
 import 'profit_screen.dart';
 import 'quick_sale_screen.dart';
+import 'hotspot_setup_screen.dart';
 import 'monitor_screen.dart';
 import 'network_screen.dart';
 import 'search_screen.dart';
@@ -67,6 +68,8 @@ class PlusScreen extends StatelessWidget {
           () => LeasesScreen(service: service)),
       (Icons.receipt_long_outlined, 'Journal', 'Événements du routeur', 'Journal',
           () => LogScreen(service: service)),
+      (Icons.router_outlined, 'Installer un hotspot', 'Équiper un routeur neuf : réseau, hotspot, profils, sécurité',
+          'Installer un hotspot', () => HotspotSetupScreen(service: service, session: session)),
       (Icons.backup_outlined, 'Sauvegarde', 'Profils et sauvegarde du routeur', 'Sauvegarde',
           () => BackupScreen(service: service, session: session)),
       (Icons.lock_outline, 'Sécurité et alertes', 'Code de verrouillage, stock bas', 'Sécurité et alertes',

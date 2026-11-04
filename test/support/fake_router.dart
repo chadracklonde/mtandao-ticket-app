@@ -40,6 +40,22 @@ class FakeRouter {
   final List<Map<String, String>> firewall = [];
   final List<Map<String, String>> hotspots = [];
   final List<Map<String, String>> addresses = [];
+
+  /// Tables simples (menu RouterOS -> lignes) gérées de façon générique :
+  /// print (avec filtres), add, set, remove.
+  late final Map<String, List<Map<String, String>>> tables = {
+    '/ip/pool': <Map<String, String>>[],
+    '/ip/dhcp-server': <Map<String, String>>[],
+    '/ip/dhcp-server/network': <Map<String, String>>[],
+    '/ip/firewall/nat': <Map<String, String>>[],
+    '/ip/hotspot/profile': <Map<String, String>>[],
+    '/ip/hotspot': hotspots,
+    '/ip/address': addresses,
+    '/ip/service': <Map<String, String>>[],
+    '/user': <Map<String, String>>[],
+    '/system/script': scripts,
+    '/ip/dns': <Map<String, String>>[],
+  };
   Map<String, String> resource = {
     'cpu-load': '7',
     'free-memory': '60000000',
@@ -254,6 +270,45 @@ class FakeRouter {
         return _rows(scripts
             .where((s) => queries.entries.every((q) => s[q.key] == q.value))
             .toList());
+    }
+    final slash = cmd.lastIndexOf('/');
+    final table = tables[cmd.substring(0, slash)];
+    if (table != null) {
+      switch (cmd.substring(slash + 1)) {
+        case 'print':
+          return _rows(table.where((r) => queries.entries.every((q) => r[q.key] == q.value)).toList());
+        case 'add':
+          {
+            final row = {'.id': _newId(), ...attrs};
+            if (table == tables['/ip/hotspot'] && table.isNotEmpty) {
+              return _trap('failure: hotspot already exists');
+            }
+            table.add(row);
+            return [
+              ['!done', '=ret=${row['.id']}']
+            ];
+          }
+        case 'set':
+          if (cmd == '/ip/dns/set') {
+            tables['/ip/dns']!
+              ..clear()
+              ..add({'.id': '*dns', ...attrs});
+            return [
+              ['!done']
+            ];
+          }
+          if (attrs['.id'] == null && attrs['numbers'] != null) {
+            final i = table.indexWhere((r) => r['name'] == attrs['numbers']);
+            if (i < 0) return _trap('no such item (4)');
+            table[i] = {...table[i], ...attrs}..remove('numbers');
+            return [
+              ['!done']
+            ];
+          }
+          return _update(table, attrs);
+        case 'remove':
+          return _remove(table, attrs['.id']);
+      }
     }
     return _trap('no such command');
   }
