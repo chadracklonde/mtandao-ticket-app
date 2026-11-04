@@ -1,6 +1,5 @@
 import '../models.dart';
 import '../routeros/api_client.dart';
-import 'speed.dart';
 
 /// État du routeur utile avant d'installer un hotspot.
 class RouterFacts {
