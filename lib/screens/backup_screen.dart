@@ -5,6 +5,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
 import '../models.dart';
+import '../widgets/desktop.dart';
 import '../services/file_delivery.dart';
 import '../services/mikhmon_service.dart';
 import '../services/profile_backup.dart';
@@ -98,7 +99,7 @@ class _BackupScreenState extends State<BackupScreen> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    return ListView(
+    return ContentWidth(maxWidth: 760, child: ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Text('Profils', style: t.titleMedium),
@@ -132,6 +133,6 @@ class _BackupScreenState extends State<BackupScreen> {
           const LinearProgressIndicator(),
         ],
       ],
-    );
+    ));
   }
 }

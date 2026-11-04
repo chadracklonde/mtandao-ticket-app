@@ -5,6 +5,7 @@ import '../services/mikhmon_service.dart';
 import '../services/stock_alert.dart';
 import '../util.dart';
 import '../widgets/async_body.dart';
+import '../widgets/desktop.dart';
 import 'voucher_list_screen.dart';
 
 /// Génération d'un lot de tickets.
@@ -187,11 +188,7 @@ class _GenerateFormState extends State<_GenerateForm> {
       _limit.text = profile.uptime;
       _data.text = profile.dataLimit;
     }
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    final left = <Widget>[
           DropdownButtonFormField<String>(
             initialValue: profile?.name,
             decoration: const InputDecoration(labelText: 'Profil', border: OutlineInputBorder()),
@@ -268,6 +265,8 @@ class _GenerateFormState extends State<_GenerateForm> {
             ],
           ),
           const SizedBox(height: 16),
+    ];
+    final right = <Widget>[
           TextFormField(
             controller: _count,
             enabled: !_busy,
@@ -337,8 +336,19 @@ class _GenerateFormState extends State<_GenerateForm> {
               icon: const Icon(Icons.auto_awesome),
               label: const Text('Générer les tickets'),
             ),
-        ],
-      ),
+    ];
+    return Form(
+      key: _formKey,
+      child: isDesktopPlatform
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: left)),
+                const SizedBox(width: 32),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: right)),
+              ],
+            )
+          : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [...left, ...right]),
     );
   }
 }

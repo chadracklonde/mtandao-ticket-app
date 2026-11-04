@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models.dart';
+import '../widgets/desktop.dart';
 import '../services/mikhmon_service.dart';
 import '../util.dart';
 
@@ -91,7 +92,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
       appBar: AppBar(
         title: Text(widget.profile == null ? 'Nouveau profil' : 'Modifier le profil'),
       ),
-      body: Form(
+      body: ContentWidth(maxWidth: 720, child: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -218,7 +219,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 }

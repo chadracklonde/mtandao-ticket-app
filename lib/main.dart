@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'screens/sessions_screen.dart';
+import 'widgets/desktop.dart';
 import 'widgets/lock_gate.dart';
 
 // Charte : voir docs/identite-visuelle.md
@@ -52,19 +53,22 @@ class MtandaoApp extends StatelessWidget {
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       theme: _buildTheme(Brightness.light),
       darkTheme: _buildTheme(Brightness.dark),
-      // Sur ordinateur (fenêtre large), le contenu garde une largeur de téléphone
-      // large, centrée : l'interface reste lisible.
+      // Téléphone : le contenu garde une largeur de téléphone large, centrée.
+      // Ordinateur (Windows, macOS) : toute la fenêtre est utilisée, la mise en
+      // page s'adapte (barre latérale, colonnes).
       builder: (context, child) => LockGate(
-        child: ColoredBox(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 760),
-              child: child,
-            ),
-          ),
-        ),
+        child: isDesktopPlatform
+            ? child!
+            : ColoredBox(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 760),
+                    child: child,
+                  ),
+                ),
+              ),
       ),
       home: const SessionsScreen(),
     );

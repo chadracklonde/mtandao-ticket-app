@@ -7,6 +7,7 @@ import '../services/session_store.dart';
 import '../util.dart';
 import 'home_shell.dart';
 import 'session_form.dart';
+import '../widgets/desktop.dart';
 
 /// Liste des routeurs enregistrés (équivalent de la page « Sessions » de Mikhmon).
 class SessionsScreen extends StatefulWidget {
@@ -115,7 +116,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                     ),
                   ),
                 )
-              : ListView.builder(
+              : ContentWidth(maxWidth: 760, child: ListView.builder(
                   padding: const EdgeInsets.only(bottom: 88),
                   itemCount: _sessions.length,
                   itemBuilder: (context, i) {
@@ -134,7 +135,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                       ),
                     );
                   },
-                ),
+                )),
     );
   }
 }

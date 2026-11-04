@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/app_lock.dart';
 import '../services/stock_alert.dart';
 import '../util.dart';
+import '../widgets/desktop.dart';
 
 /// Code de verrouillage de l'application et seuil d'alerte de stock.
 class SecurityScreen extends StatefulWidget {
@@ -128,7 +129,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
   Widget build(BuildContext context) {
     if (!_loaded) return const Center(child: CircularProgressIndicator());
     final t = Theme.of(context).textTheme;
-    return ListView(
+    return ContentWidth(maxWidth: 760, child: ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Text('Verrouillage', style: t.titleMedium),
@@ -177,7 +178,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
           ],
         ),
       ],
-    );
+    ));
   }
 
   Future<void> _setThreshold(int v) async {

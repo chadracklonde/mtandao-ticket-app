@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models.dart';
+import '../widgets/desktop.dart';
 import '../routeros/api_client.dart';
 import '../services/session_store.dart';
 import '../util.dart';
@@ -104,7 +105,7 @@ class _SessionFormState extends State<SessionForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.session == null ? 'Nouveau routeur' : 'Modifier le routeur')),
-      body: Form(
+      body: ContentWidth(maxWidth: 640, child: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -230,7 +231,7 @@ class _SessionFormState extends State<SessionForm> {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 }
