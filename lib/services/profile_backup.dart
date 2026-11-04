@@ -18,6 +18,7 @@ String profilesToJson(List<HotspotProfile> profiles) {
           'price': p.price,
           'uptime': p.uptime,
           'dataLimit': p.dataLimit,
+          'bindDevice': p.bindDevice,
         }
     ],
   });
@@ -46,6 +47,7 @@ List<HotspotProfile> profilesFromJson(String text) {
       price: (item['price'] as num?)?.toInt() ?? 0,
       uptime: (item['uptime'] as String?) ?? '',
       dataLimit: (item['dataLimit'] as String?) ?? '',
+      bindDevice: item['bindDevice'] == true,
     ));
   }
   return out;

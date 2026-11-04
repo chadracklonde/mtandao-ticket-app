@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models.dart';
 import '../widgets/desktop.dart';
 import '../services/mikhmon_service.dart';
+import '../services/speed.dart';
 import '../util.dart';
 
 /// Création / modification d'un profil hotspot.
@@ -22,15 +23,6 @@ class ProfileFormScreen extends StatefulWidget {
   State<ProfileFormScreen> createState() => _ProfileFormScreenState();
 }
 
-final RegExp _ratePattern = RegExp(r'^[0-9]+[kKmM]?(/[0-9]+[kKmM]?)?$');
-
-/// `2M` devient `2M/2M` (même vitesse dans les deux sens) ; `1M/5M` reste tel quel.
-String _normalizeRate(String text) {
-  final t = text.trim();
-  if (t.isEmpty || t.contains('/')) return t;
-  return '$t/$t';
-}
-
 class _ProfileFormScreenState extends State<ProfileFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _name;
@@ -39,6 +31,9 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   late final TextEditingController _price;
   late final TextEditingController _uptime;
   late final TextEditingController _data;
+  late final TextEditingController _minRate;
+  late bool _burst;
+  late bool _bind;
   bool _busy = false;
 
   @override
@@ -46,7 +41,11 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     super.initState();
     final p = widget.profile;
     _name = TextEditingController(text: p?.name ?? '');
-    _rate = TextEditingController(text: p?.rateLimit ?? '');
+    final parts = parseRateLimit(p?.rateLimit ?? '');
+    _rate = TextEditingController(text: parts.base);
+    _minRate = TextEditingController(text: parts.minimum);
+    _burst = parts.burst;
+    _bind = p?.bindDevice ?? false;
     _shared = TextEditingController(text: '${p?.sharedUsers ?? 1}');
     _price = TextEditingController(text: p == null || p.price == 0 ? '' : '${p.price}');
     _uptime = TextEditingController(text: p?.uptime ?? '');
@@ -57,6 +56,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   void dispose() {
     _name.dispose();
     _rate.dispose();
+    _minRate.dispose();
     _shared.dispose();
     _price.dispose();
     _uptime.dispose();
@@ -71,7 +71,9 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
       await widget.service.saveProfile(HotspotProfile(
         id: widget.profile?.id ?? '',
         name: _name.text.trim(),
-        rateLimit: _normalizeRate(_rate.text),
+        rateLimit: buildRateLimit(RateParts(base: _rate.text, burst: _burst, minimum: _minRate.text)),
+        parentQueue: widget.profile?.parentQueue ?? '',
+        bindDevice: _bind,
         dataLimit: _data.text.trim().toUpperCase(),
         sharedUsers: int.parse(_shared.text.trim()),
         price: int.tryParse(_price.text.trim()) ?? 0,
@@ -179,9 +181,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
               ),
               validator: (v) {
                 final t = (v ?? '').trim();
-                return (t.isNotEmpty && !_ratePattern.hasMatch(t))
-                    ? 'Format invalide (ex. 2M ou 1M/5M)'
-                    : null;
+                return (t.isNotEmpty && !isValidRate(t)) ? 'Format invalide (ex. 2M ou 1M/5M)' : null;
               },
             ),
             const SizedBox(height: 8),
@@ -194,6 +194,36 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                     onPressed: _busy ? null : () => setState(() => _rate.text = t),
                   ),
               ],
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Départ rapide'),
+              subtitle: const Text('Vitesse doublée pendant les premières secondes : les pages '
+                  's\'ouvrent plus vite. Sans effet sans vitesse maximale.'),
+              value: _burst,
+              onChanged: _busy ? null : (v) => setState(() => _burst = v),
+            ),
+            TextFormField(
+              controller: _minRate,
+              enabled: !_busy,
+              autocorrect: false,
+              decoration: const InputDecoration(
+                labelText: 'Débit minimum garanti (facultatif)',
+                helperText: 'Ex. 256k : chaque client garde au moins ce débit quand le réseau est chargé',
+                border: OutlineInputBorder(),
+              ),
+              validator: (v) {
+                final t = (v ?? '').trim();
+                return (t.isNotEmpty && !isValidRate(t)) ? 'Format invalide (ex. 256k)' : null;
+              },
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Lier le ticket au premier appareil'),
+              subtitle: const Text('Le ticket ne fonctionne plus que sur l\'appareil qui s\'est '
+                  'connecté en premier : impossible de le partager.'),
+              value: _bind,
+              onChanged: _busy ? null : (v) => setState(() => _bind = v),
             ),
             const SizedBox(height: 16),
             TextFormField(

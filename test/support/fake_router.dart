@@ -36,6 +36,10 @@ class FakeRouter {
   final List<String> savedFiles = [];
   final List<Map<String, String>> leases = [];
   final List<Map<String, String>> bindings = [];
+  final List<Map<String, String>> queues = [];
+  final List<Map<String, String>> firewall = [];
+  final List<Map<String, String>> hotspots = [];
+  final List<Map<String, String>> addresses = [];
   Map<String, String> resource = {
     'cpu-load': '7',
     'free-memory': '60000000',
@@ -203,6 +207,47 @@ class FakeRouter {
         ];
       case '/ip/hotspot/ip-binding/remove':
         return _remove(bindings, attrs['.id']);
+      case '/queue/simple/print':
+        return _rows(queues
+            .where((q) => queries.entries.every((e) => q[e.key] == e.value))
+            .toList());
+      case '/queue/simple/add':
+        queues.add({'.id': _newId(), ...attrs});
+        return [
+          ['!done', '=ret=${queues.last['.id']}']
+        ];
+      case '/queue/simple/set':
+        return _update(queues, attrs);
+      case '/queue/simple/remove':
+        return _remove(queues, attrs['.id']);
+      case '/ip/firewall/filter/print':
+        return _rows(firewall
+            .where((q) => queries.entries.every((e) => q[e.key] == e.value))
+            .toList());
+      case '/ip/firewall/filter/add':
+        {
+          final before = attrs.remove('place-before');
+          final row = {'.id': _newId(), ...attrs};
+          final i = before == null ? -1 : firewall.indexWhere((r) => r['.id'] == before);
+          if (i >= 0) {
+            firewall.insert(i, row);
+          } else {
+            firewall.add(row);
+          }
+          return [
+            ['!done', '=ret=${row['.id']}']
+          ];
+        }
+      case '/ip/firewall/filter/set':
+        return _update(firewall, attrs);
+      case '/ip/firewall/filter/remove':
+        return _remove(firewall, attrs['.id']);
+      case '/ip/hotspot/print':
+        return _rows(hotspots);
+      case '/ip/address/print':
+        return _rows(addresses
+            .where((q) => queries.entries.every((e) => q[e.key] == e.value))
+            .toList());
       case '/system/script/remove':
         return _remove(scripts, attrs['.id']);
       case '/system/script/print':

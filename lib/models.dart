@@ -1,5 +1,6 @@
 // Modèles de données de l'application.
 
+import 'services/speed.dart';
 import 'util.dart';
 
 final RegExp safeNamePattern = RegExp(r'^[A-Za-z0-9 _.\-]+$');
@@ -77,10 +78,16 @@ class HotspotProfile {
     this.price = 0,
     this.uptime = '',
     this.dataLimit = '',
+    this.parentQueue = '',
+    this.bindDevice = false,
   });
 
   final String id;
   final String name;
+
+  /// Vitesse du profil, au format RouterOS : `envoi/réception`, éventuellement
+  /// suivie de la rafale, du seuil, de la durée, de la priorité et du minimum
+  /// garanti (voir `speed.dart`).
   final String rateLimit;
   final int sharedUsers;
   final int price;
@@ -93,8 +100,18 @@ class HotspotProfile {
   /// Vide : illimitée.
   final String dataLimit;
 
-  static final RegExp _meta =
-      RegExp(r'#mkm:price=(\d*);uptime=([0-9a-z]*)(?:;data=([0-9a-zA-Z.]*))?');
+  /// Vitesse maximale seule (sans rafale ni minimum), pour l'affichage.
+  String get speedLabel => parseRateLimit(rateLimit).base;
+
+  /// File parente (enveloppe de bande passante commune). Vide : aucune.
+  final String parentQueue;
+
+  /// Vrai : le ticket est lié au premier appareil qui s'y connecte (pas de
+  /// partage possible ensuite).
+  final bool bindDevice;
+
+  static final RegExp _meta = RegExp(
+      r'#mkm:price=(\d*);uptime=([0-9a-z]*)(?:;data=([0-9a-zA-Z.]*))?(?:;bind=(1))?');
 
   factory HotspotProfile.fromRow(Map<String, String> r) {
     final m = _meta.firstMatch(r['on-login'] ?? '');
@@ -106,6 +123,8 @@ class HotspotProfile {
       price: int.tryParse(m?.group(1) ?? '') ?? 0,
       uptime: m?.group(2) ?? '',
       dataLimit: m?.group(3) ?? '',
+      parentQueue: (r['parent-queue'] ?? '') == 'none' ? '' : (r['parent-queue'] ?? ''),
+      bindDevice: m?.group(4) == '1',
     );
   }
 
@@ -125,7 +144,8 @@ class HotspotProfile {
     assert(uptime.isEmpty || uptimePattern.hasMatch(uptime));
     assert(dataLimit.isEmpty || dataPattern.hasMatch(dataLimit));
     final lines = <String>[
-      '#mkm:price=$price;uptime=$uptime${dataLimit.isEmpty ? '' : ';data=$dataLimit'}',
+      '#mkm:price=$price;uptime=$uptime${dataLimit.isEmpty ? '' : ';data=$dataLimit'}'
+          '${bindDevice ? ';bind=1' : ''}',
       r':local d [/system clock get date]',
       r':local t [/system clock get time]',
       r':local a [:tostr $address]',
@@ -141,6 +161,8 @@ class HotspotProfile {
           '$name'
           r'-|-" . $c) owner="mkm" source=[:tostr $d] comment=mikhmon',
       r'/ip hotspot user set [find where name=$user] comment=("used-" . $c)',
+      if (bindDevice)
+        r':if ([:tostr [/ip hotspot user get [find where name=$user] mac-address]] = "00:00:00:00:00:00") do={/ip hotspot user set [find where name=$user] mac-address=$"mac-address"}',
       r':if ([:len $lu] > 0 and $lu > 00:00:00) do={',
       r':local ev (":if ([:len [/system script find where name=\"mkm-a-" . $user . "\"]] = 0) do={/system script add name=\"mkm-a-" . $user . "\" source=armed comment=mkm-a} else={/ip hotspot active remove [find where user=\"" . $user . "\"]; /ip hotspot user remove [find where name=\"" . $user . "\"]; /system script remove [find where name=\"mkm-a-" . $user . "\"]; /system scheduler remove [find where name=\"mkm-e-" . $user . "\"]}")',
       r':local st $t',
@@ -228,6 +250,7 @@ class HotspotUser {
     required this.bytesIn,
     required this.bytesOut,
     required this.limitBytes,
+    this.boundMac = '',
   });
 
   final String id;
@@ -246,6 +269,9 @@ class HotspotUser {
   final int bytesOut;
   final int limitBytes;
 
+  /// Appareil auquel le ticket est lié (vide : aucun).
+  final String boundMac;
+
   factory HotspotUser.fromRow(Map<String, String> r) {
     final lu = parseRouterDuration(r['limit-uptime'] ?? '');
     return HotspotUser(
@@ -260,6 +286,7 @@ class HotspotUser {
       bytesIn: int.tryParse(r['bytes-in'] ?? '') ?? 0,
       bytesOut: int.tryParse(r['bytes-out'] ?? '') ?? 0,
       limitBytes: int.tryParse(r['limit-bytes-total'] ?? '') ?? 0,
+      boundMac: (r['mac-address'] ?? '') == '00:00:00:00:00:00' ? '' : (r['mac-address'] ?? ''),
     );
   }
 
@@ -469,4 +496,38 @@ class BlockedDevice {
         mac: r['mac-address'] ?? '',
         comment: r['comment'] ?? '',
       );
+}
+
+/// Enveloppe de bande passante commune à tous les clients.
+class SharedBandwidth {
+  const SharedBandwidth({required this.id, required this.target, required this.upBits, required this.downBits});
+  final String id;
+  final String target;
+
+  /// Vitesses totales en bits par seconde (envoi / réception des clients).
+  final int upBits;
+  final int downBits;
+
+  factory SharedBandwidth.fromRow(Map<String, String> r) {
+    final parts = (r['max-limit'] ?? '').split('/');
+    return SharedBandwidth(
+      id: r['.id'] ?? '',
+      target: r['target'] ?? '',
+      upBits: parts.isNotEmpty ? (parseRateBits(parts[0]) ?? 0) : 0,
+      downBits: parts.length > 1 ? (parseRateBits(parts[1]) ?? 0) : 0,
+    );
+  }
+}
+
+/// Réseau d'une adresse `10.5.50.1/24` : `10.5.50.0/24`. Null si invalide.
+String? networkOf(String cidr) {
+  final m = RegExp(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)/(\d+)$').firstMatch(cidr.trim());
+  if (m == null) return null;
+  final o = [for (var i = 1; i <= 4; i++) int.parse(m.group(i)!)];
+  final prefix = int.parse(m.group(5)!);
+  if (o.any((x) => x > 255) || prefix > 32) return null;
+  final ip = (o[0] << 24) | (o[1] << 16) | (o[2] << 8) | o[3];
+  final mask = prefix == 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) & 0xFFFFFFFF;
+  final n = ip & mask;
+  return '${(n >> 24) & 255}.${(n >> 16) & 255}.${(n >> 8) & 255}.${n & 255}/$prefix';
 }

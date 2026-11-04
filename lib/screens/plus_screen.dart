@@ -9,6 +9,8 @@ import 'cash_screen.dart';
 import 'profit_screen.dart';
 import 'quick_sale_screen.dart';
 import 'monitor_screen.dart';
+import 'network_screen.dart';
+import 'search_screen.dart';
 import 'profiles_screen.dart';
 import 'security_screen.dart';
 import 'ticket_layout_screen.dart';
@@ -41,6 +43,8 @@ class PlusScreen extends StatelessWidget {
         );
 
     final items = <(IconData, String, String, String, Widget Function())>[
+      (Icons.search, 'Rechercher un ticket', 'Par code, appareil, montant ou heure de vente', 'Recherche',
+          () => SearchScreen(service: service, session: session)),
       (Icons.bolt, 'Vente rapide', 'Un ticket à envoyer par WhatsApp ou SMS', 'Vente rapide',
           () => QuickSaleScreen(service: service, session: session)),
       (Icons.lock_clock, 'Clôture de caisse', 'Attendu contre encaissé, tickets à vérifier',
@@ -55,6 +59,8 @@ class PlusScreen extends StatelessWidget {
           'Utilisateurs', () => UsersScreen(service: service, session: session)),
       (Icons.print_outlined, 'Mise en page du ticket', 'Colonnes, logo, rouleau 58/80 mm, aperçu',
           'Mise en page du ticket', () => TicketLayoutScreen(session: session)),
+      (Icons.speed, 'Vitesse et équité', 'Bande passante partagée, connexions par appareil',
+          'Vitesse et équité', () => NetworkScreen(service: service)),
       (Icons.monitor_heart_outlined, 'Surveillance', 'Processeur, mémoire, trafic en direct',
           'Surveillance', () => MonitorScreen(service: service)),
       (Icons.devices_outlined, 'Appareils (DHCP)', 'Les appareils connus du routeur', 'Appareils',
@@ -114,7 +120,7 @@ class PlusScreen extends StatelessWidget {
     return ListView(
       children: [
         for (var i = 0; i < items.length; i++) ...[
-          if (i == 7 || i == 10) const Divider(),
+          if (i == 5 || i == 9 || i == 12) const Divider(),
           tile(items[i].$1, items[i].$2, items[i].$3, items[i].$4, items[i].$5),
         ],
       ],

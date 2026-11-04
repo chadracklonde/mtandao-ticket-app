@@ -4,6 +4,7 @@ import '../models.dart';
 import '../routeros/api_client.dart';
 import '../util.dart';
 import 'profile_backup.dart';
+import 'speed.dart';
 
 enum CodeCharset { digits, lower, mixed }
 
@@ -98,12 +99,18 @@ class MikhmonService {
     if (p.dataLimit.isNotEmpty && parseDataSize(p.dataLimit) == null) {
       throw RouterOsException('Limite de données invalide. Exemples : 500M, 1G, 2G.');
     }
+    // Un nouveau profil rejoint l'enveloppe commune de bande passante, si elle existe.
+    var parent = p.parentQueue;
+    if (p.id.isEmpty && parent.isEmpty && await sharedBandwidth() != null) {
+      parent = sharedQueueName;
+    }
     final words = [
       if (p.id.isEmpty) '/ip/hotspot/user/profile/add' else '/ip/hotspot/user/profile/set',
       if (p.id.isNotEmpty) '=.id=${p.id}',
       '=name=${p.name}',
       '=rate-limit=${p.rateLimit}',
       '=shared-users=${p.sharedUsers}',
+      '=parent-queue=${parent.isEmpty ? 'none' : parent}',
       '=on-login=${p.buildOnLogin()}',
     ];
     await client.run(words);
@@ -352,7 +359,7 @@ class MikhmonService {
     final rows = await client.run([
       '/ip/hotspot/user/print',
       '=.proplist=.id,name,password,profile,comment,disabled,uptime,limit-uptime,'
-          'bytes-in,bytes-out,limit-bytes-total',
+          'bytes-in,bytes-out,limit-bytes-total,mac-address',
     ]);
     final list = rows.map(HotspotUser.fromRow).where((u) => u.name.isNotEmpty).toList();
     list.sort((a, b) => a.name.compareTo(b.name));
@@ -446,4 +453,132 @@ class MikhmonService {
 
   Future<void> unblockDevice(String id) =>
       client.run(['/ip/hotspot/ip-binding/remove', '=.id=$id']);
+
+  // ---- Vitesse et équité entre les clients ---------------------------------
+
+  /// Nom de la file qui regroupe tous les clients (enveloppe commune).
+  static const sharedQueueName = 'mkm-total';
+
+  /// Enveloppe de bande passante commune, ou null si elle n'est pas activée.
+  Future<SharedBandwidth?> sharedBandwidth() async {
+    final rows = await client.run([
+      '/queue/simple/print',
+      '?name=$sharedQueueName',
+      '=.proplist=.id,name,target,max-limit',
+    ]);
+    if (rows.isEmpty) return null;
+    return SharedBandwidth.fromRow(rows.first);
+  }
+
+  /// Réseau des clients du hotspot (ex. `10.5.50.0/24`), si on peut le deviner.
+  Future<String?> detectHotspotNetwork() async {
+    final servers = await client.run(['/ip/hotspot/print', '=.proplist=interface']);
+    if (servers.isEmpty) return null;
+    final iface = servers.first['interface'] ?? '';
+    if (iface.isEmpty) return null;
+    final addrs = await client.run(['/ip/address/print', '?interface=$iface', '=.proplist=address']);
+    if (addrs.isEmpty) return null;
+    return networkOf(addrs.first['address'] ?? '');
+  }
+
+  /// Active (ou met à jour) l'enveloppe commune et y rattache tous les profils.
+  Future<void> enableSharedBandwidth({
+    required int downMbps,
+    required int upMbps,
+    required String target,
+  }) async {
+    if (downMbps < 1 || upMbps < 1) {
+      throw RouterOsException('Indiquez la vitesse totale de la connexion (au moins 1 Mb/s).');
+    }
+    if (target.trim().isEmpty) {
+      throw RouterOsException('Indiquez le réseau des clients (ex. 10.5.50.0/24).');
+    }
+    final limit = '${upMbps}M/${downMbps}M';
+    final existing = await sharedBandwidth();
+    if (existing == null) {
+      await client.run([
+        '/queue/simple/add',
+        '=name=$sharedQueueName',
+        '=target=${target.trim()}',
+        '=max-limit=$limit',
+        '=comment=mkm',
+      ]);
+    } else {
+      await client.run([
+        '/queue/simple/set',
+        '=.id=${existing.id}',
+        '=target=${target.trim()}',
+        '=max-limit=$limit',
+      ]);
+    }
+    for (final p in await profiles()) {
+      if (p.parentQueue != sharedQueueName) {
+        await client.run(['/ip/hotspot/user/profile/set', '=.id=${p.id}', '=parent-queue=$sharedQueueName']);
+      }
+    }
+  }
+
+  /// Retire l'enveloppe commune (les profils redeviennent indépendants).
+  Future<void> disableSharedBandwidth() async {
+    for (final p in await profiles()) {
+      if (p.parentQueue == sharedQueueName) {
+        await client.run(['/ip/hotspot/user/profile/set', '=.id=${p.id}', '=parent-queue=none']);
+      }
+    }
+    final existing = await sharedBandwidth();
+    if (existing != null) await client.run(['/queue/simple/remove', '=.id=${existing.id}']);
+  }
+
+  /// Nombre maximal de connexions simultanées par appareil, ou null si aucune limite.
+  Future<int?> connectionLimit() async {
+    final rows = await client.run([
+      '/ip/firewall/filter/print',
+      '?comment=mkm-connlimit',
+      '=.proplist=.id,connection-limit',
+    ]);
+    if (rows.isEmpty) return null;
+    return int.tryParse((rows.first['connection-limit'] ?? '').split(',').first);
+  }
+
+  /// Fixe (ou retire, avec null) la limite de connexions par appareil.
+  /// La règle est placée avant toutes les autres pour être appliquée.
+  Future<void> setConnectionLimit(int? limit) async {
+    final rows = await client.run([
+      '/ip/firewall/filter/print',
+      '?comment=mkm-connlimit',
+      '=.proplist=.id',
+    ]);
+    if (limit == null) {
+      for (final r in rows) {
+        await client.run(['/ip/firewall/filter/remove', '=.id=${r['.id']}']);
+      }
+      return;
+    }
+    if (limit < 20 || limit > 5000) {
+      throw RouterOsException('Choisissez une limite entre 20 et 5000 connexions.');
+    }
+    if (rows.isNotEmpty) {
+      await client.run([
+        '/ip/firewall/filter/set',
+        '=.id=${rows.first['.id']}',
+        '=connection-limit=$limit,32',
+      ]);
+      return;
+    }
+    final first = await client.run(['/ip/firewall/filter/print', '=.proplist=.id']);
+    await client.run([
+      '/ip/firewall/filter/add',
+      '=chain=forward',
+      '=protocol=tcp',
+      '=connection-limit=$limit,32',
+      '=action=drop',
+      '=comment=mkm-connlimit',
+      if (first.isNotEmpty) '=place-before=${first.first['.id']}',
+    ]);
+  }
+
+  /// Libère un ticket lié à un appareil (il pourra se lier à un autre).
+  Future<void> unbindUser(String id) async {
+    await client.run(['/ip/hotspot/user/set', '=.id=$id', '=mac-address=00:00:00:00:00:00']);
+  }
 }

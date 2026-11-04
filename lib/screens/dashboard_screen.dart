@@ -11,6 +11,7 @@ import 'abuse_screen.dart';
 import 'cash_screen.dart';
 import 'profit_screen.dart';
 import 'quick_sale_screen.dart';
+import 'search_screen.dart';
 
 class _Dash {
   _Dash({
@@ -263,6 +264,12 @@ class DashboardScreen extends StatelessWidget {
                       QuickSaleScreen(service: service, session: session)),
                   icon: const Icon(Icons.bolt),
                   label: const Text('Vente rapide'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      openPage(context, 'Recherche', SearchScreen(service: service, session: session)),
+                  icon: const Icon(Icons.search),
+                  label: const Text('Rechercher un ticket'),
                 ),
                 OutlinedButton.icon(
                   onPressed: () => openPage(context, 'Clôture de caisse',

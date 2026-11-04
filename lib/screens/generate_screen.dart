@@ -204,7 +204,7 @@ class _GenerateFormState extends State<_GenerateForm> {
               child: Text(
                 [
                   if (profile.price > 0) formatMoney(profile.price, currency),
-                  if (profile.rateLimit.isNotEmpty) 'Vitesse ${profile.rateLimit}',
+                  if (profile.speedLabel.isNotEmpty) 'Vitesse ${profile.speedLabel}',
                   '${profile.sharedUsers} appareil(s)',
                 ].join(' · '),
                 style: Theme.of(context).textTheme.bodySmall,

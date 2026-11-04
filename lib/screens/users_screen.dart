@@ -4,6 +4,7 @@ import '../models.dart';
 import '../services/mikhmon_service.dart';
 import '../util.dart';
 import '../widgets/async_body.dart';
+import '../widgets/extend_dialog.dart';
 
 enum UserFilter { all, fresh, used, exhausted, disabled }
 
@@ -55,65 +56,10 @@ class _UsersScreenState extends State<UsersScreen> {
   }
 
   Future<void> _extend(HotspotUser u) async {
-    final time = TextEditingController();
-    final data = TextEditingController();
-    final key = GlobalKey<FormState>();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Prolonger ${u.name}'),
-        content: Form(
-          key: key,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (u.limitUptime != null)
-                TextFormField(
-                  controller: time,
-                  autocorrect: false,
-                  decoration: const InputDecoration(
-                    labelText: 'Temps à ajouter',
-                    helperText: 'Ex. 1h, 1d',
-                  ),
-                  validator: (v) {
-                    final t = (v ?? '').trim().toLowerCase();
-                    return (t.isNotEmpty && !uptimePattern.hasMatch(t)) ? 'Format invalide' : null;
-                  },
-                ),
-              if (u.limitBytes > 0)
-                TextFormField(
-                  controller: data,
-                  autocorrect: false,
-                  decoration: const InputDecoration(
-                    labelText: 'Données à ajouter',
-                    helperText: 'Ex. 500M, 1G',
-                  ),
-                  validator: (v) {
-                    final t = (v ?? '').trim();
-                    return (t.isNotEmpty && parseDataSize(t) == null) ? 'Format invalide' : null;
-                  },
-                ),
-              if (u.limitUptime == null && u.limitBytes <= 0)
-                const Text('Ce ticket est illimité : il n\'y a rien à prolonger.'),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
-          FilledButton(
-            onPressed: () {
-              if (key.currentState!.validate()) Navigator.pop(ctx, true);
-            },
-            child: const Text('Prolonger'),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
-    final addTime = parseRouterDuration(time.text.trim().toLowerCase());
-    final addBytes = parseDataSize(data.text);
+    final ask = await askExtension(context, u);
+    if (ask == null) return;
     await _run(
-      () => widget.service.extendUser(u, addTime: addTime, addBytes: addBytes),
+      () => widget.service.extendUser(u, addTime: ask.time, addBytes: ask.bytes),
       done: 'Ticket prolongé',
     );
   }
