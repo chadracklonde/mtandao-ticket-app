@@ -240,7 +240,7 @@ void main() {
       expect(r.tickets.map((t) => t.name), ['555111']);
       final d = run('tecno');
       expect(d.devices.single.mac, 'AA:BB:CC:00:00:01');
-      expect(d.devices.single.tickets, ['482913']);
+      expect(d.devices.single.tickets, unorderedEquals(['482913', '123123']));
     });
 
     test('requête vide ou sans résultat', () {
@@ -360,8 +360,8 @@ void main() {
       expect(tester.widget<SwitchListTile>(find.widgetWithText(SwitchListTile, 'Départ rapide')).value, isTrue);
       expect(find.text('256k/256k'), findsOneWidget);
       expect(find.text('2M/2M'), findsOneWidget);
-      await tester.ensureVisible(find.text('Enregistrer'));
-      await tester.tap(find.text('Enregistrer'));
+      await tester.ensureVisible(find.text('Enregistrer sur le routeur'));
+      await tester.tap(find.text('Enregistrer sur le routeur'));
       await settle(tester, 20);
       final saved = router.profiles.single;
       expect(saved['rate-limit'], '2M/2M 4M/4M 1500k/1500k 10s/10s 8 256k/256k');

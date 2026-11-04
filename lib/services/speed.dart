@@ -1,8 +1,8 @@
-/// Vitesses au format RouterOS.
-///
-/// Une limite complète s'écrit :
-/// `envoi/réception rafale-envoi/rafale-réception seuil durée priorité minimum`
-/// (par exemple `1M/2M 2M/4M 750k/1500k 10s/10s 8 256k/512k`). Seul le premier
+// Vitesses au format RouterOS.
+//
+// Une limite complète s'écrit :
+// `envoi/réception rafale-envoi/rafale-réception seuil durée priorité minimum`
+// (par exemple `1M/2M 2M/4M 750k/1500k 10s/10s 8 256k/512k`). Seul le premier
 /// élément est obligatoire.
 
 /// Lit `512k`, `2M`, `1G` ou un nombre de bits. Null si invalide.

@@ -4,7 +4,6 @@ import '../models.dart';
 import '../routeros/api_client.dart';
 import '../util.dart';
 import 'profile_backup.dart';
-import 'speed.dart';
 
 enum CodeCharset { digits, lower, mixed }
 
