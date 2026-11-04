@@ -57,7 +57,9 @@ void main() {
       expect(find.byKey(const ValueKey('nav-Ventes')), findsOneWidget);
       expect(find.text('Changer de routeur'), findsOneWidget);
 
-      // Générer : formulaire sur deux colonnes (limite de temps à gauche, nombre à droite).
+      // L'accueil s'affiche en premier ; Générer : formulaire sur deux colonnes (limite de temps à gauche, nombre à droite).
+      await tester.tap(find.byKey(const ValueKey('nav-Générer')));
+      await settle(tester);
       final left = tester.getTopLeft(find.text('Limite de temps').first);
       final right = tester.getTopLeft(find.text('Nombre de tickets').first);
       expect(right.dx, greaterThan(left.dx + 300));

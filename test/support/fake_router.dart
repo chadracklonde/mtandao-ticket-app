@@ -35,6 +35,7 @@ class FakeRouter {
   final List<Map<String, String>> logLines = [];
   final List<String> savedFiles = [];
   final List<Map<String, String>> leases = [];
+  final List<Map<String, String>> bindings = [];
   Map<String, String> resource = {
     'cpu-load': '7',
     'free-memory': '60000000',
@@ -191,6 +192,17 @@ class FakeRouter {
         return _rows(logLines);
       case '/ip/dhcp-server/lease/print':
         return _rows(leases);
+      case '/ip/hotspot/ip-binding/print':
+        return _rows(bindings
+            .where((b) => queries.entries.every((q) => b[q.key] == q.value))
+            .toList());
+      case '/ip/hotspot/ip-binding/add':
+        bindings.add({'.id': _newId(), ...attrs});
+        return [
+          ['!done', '=ret=${bindings.last['.id']}']
+        ];
+      case '/ip/hotspot/ip-binding/remove':
+        return _remove(bindings, attrs['.id']);
       case '/system/script/remove':
         return _remove(scripts, attrs['.id']);
       case '/system/script/print':

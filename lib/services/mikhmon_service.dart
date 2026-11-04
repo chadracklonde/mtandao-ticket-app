@@ -414,4 +414,36 @@ class MikhmonService {
     out.sort((a, b) => b.time.compareTo(a.time));
     return out;
   }
+
+  // ---- Appareils bloqués (liste noire) ------------------------------------
+
+  /// Appareils bloqués du hotspot (liaisons IP de type « blocked »).
+  Future<List<BlockedDevice>> blockedDevices() async {
+    final rows = await client.run([
+      '/ip/hotspot/ip-binding/print',
+      '?type=blocked',
+      '=.proplist=.id,mac-address,comment',
+    ]);
+    return rows.map(BlockedDevice.fromRow).where((d) => d.mac.isNotEmpty).toList();
+  }
+
+  /// Bloque un appareil par son adresse MAC et coupe ses sessions en cours.
+  Future<void> blockDevice(String mac, {String note = ''}) async {
+    final clean = mac.trim().toUpperCase();
+    if (!macPattern.hasMatch(clean)) {
+      throw RouterOsException('Adresse MAC invalide. Exemple : AA:BB:CC:11:22:33');
+    }
+    await client.run([
+      '/ip/hotspot/ip-binding/add',
+      '=mac-address=$clean',
+      '=type=blocked',
+      '=comment=mkm-bloque${note.isEmpty ? '' : ' $note'}',
+    ]);
+    for (final a in await activeUsers()) {
+      if (a.mac.toUpperCase() == clean) await disconnect(a.id);
+    }
+  }
+
+  Future<void> unblockDevice(String id) =>
+      client.run(['/ip/hotspot/ip-binding/remove', '=.id=$id']);
 }

@@ -77,6 +77,11 @@ void main() {
     ));
     await settle(tester);
 
+    // L'accueil s'affiche en premier ; on passe à Générer.
+    expect(find.text('Aujourd\'hui'), findsOneWidget);
+    await tester.tap(inNav('Générer'));
+    await settle(tester);
+
     // Générer : le profil du routeur est proposé, on crée 3 tickets.
     expect(find.text('Générer les tickets'), findsOneWidget);
     // Champs : limite de temps (préremplie par le profil), données, puis nombre de tickets.

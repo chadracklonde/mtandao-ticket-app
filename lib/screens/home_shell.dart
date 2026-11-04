@@ -4,6 +4,7 @@ import '../models.dart';
 import '../services/mikhmon_service.dart';
 import '../widgets/desktop.dart';
 import 'active_screen.dart';
+import 'dashboard_screen.dart';
 import 'generate_screen.dart';
 import 'plus_screen.dart';
 import 'sales_screen.dart';
@@ -23,8 +24,9 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
-  static const _titles = ['Générer', 'Lots', 'Actifs', 'Ventes', 'Plus'];
+  static const _titles = ['Accueil', 'Générer', 'Lots', 'Actifs', 'Ventes', 'Plus'];
   static const _icons = [
+    Icons.dashboard_outlined,
     Icons.confirmation_number_outlined,
     Icons.inventory_2_outlined,
     Icons.wifi,
@@ -44,12 +46,14 @@ class _HomeShellState extends State<HomeShell> {
   Widget _page(int i) {
     switch (i) {
       case 0:
-        return GenerateScreen(service: widget.service, session: widget.session);
+        return DashboardScreen(service: widget.service, session: widget.session);
       case 1:
-        return VouchersScreen(service: widget.service, session: widget.session);
+        return GenerateScreen(service: widget.service, session: widget.session);
       case 2:
-        return ActiveScreen(service: widget.service);
+        return VouchersScreen(service: widget.service, session: widget.session);
       case 3:
+        return ActiveScreen(service: widget.service);
+      case 4:
         return SalesScreen(service: widget.service, session: widget.session);
       default:
         return PlusScreen(service: widget.service, session: widget.session);

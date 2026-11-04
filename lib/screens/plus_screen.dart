@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import '../models.dart';
 import '../services/mikhmon_service.dart';
 import '../widgets/desktop.dart';
+import 'abuse_screen.dart';
 import 'backup_screen.dart';
+import 'cash_screen.dart';
+import 'profit_screen.dart';
+import 'quick_sale_screen.dart';
 import 'monitor_screen.dart';
 import 'profiles_screen.dart';
 import 'security_screen.dart';
@@ -37,6 +41,14 @@ class PlusScreen extends StatelessWidget {
         );
 
     final items = <(IconData, String, String, String, Widget Function())>[
+      (Icons.bolt, 'Vente rapide', 'Un ticket à envoyer par WhatsApp ou SMS', 'Vente rapide',
+          () => QuickSaleScreen(service: service, session: session)),
+      (Icons.lock_clock, 'Clôture de caisse', 'Attendu contre encaissé, tickets à vérifier',
+          'Clôture de caisse', () => CashScreen(service: service, session: session)),
+      (Icons.savings_outlined, 'Bénéfice net', 'Encaissé moins vos coûts du mois', 'Bénéfice net',
+          () => ProfitScreen(service: service, session: session)),
+      (Icons.shield_outlined, 'Abus et appareils bloqués', 'Tickets partagés, gros consommateurs, liste noire',
+          'Abus et appareils bloqués', () => AbuseScreen(service: service)),
       (Icons.tune, 'Profils', 'Prix, limites de temps et de données, vitesse', 'Profils',
           () => ProfilesScreen(service: service, session: session)),
       (Icons.people_outline, 'Utilisateurs', 'Tous les tickets : consommation, prolonger, désactiver',
@@ -102,7 +114,7 @@ class PlusScreen extends StatelessWidget {
     return ListView(
       children: [
         for (var i = 0; i < items.length; i++) ...[
-          if (i == 3 || i == 6) const Divider(),
+          if (i == 7 || i == 10) const Divider(),
           tile(items[i].$1, items[i].$2, items[i].$3, items[i].$4, items[i].$5),
         ],
       ],

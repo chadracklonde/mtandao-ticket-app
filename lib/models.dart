@@ -453,3 +453,20 @@ class DhcpLease {
         comment: r['comment'] ?? '',
       );
 }
+
+/// Adresse MAC au format `AA:BB:CC:11:22:33`.
+final RegExp macPattern = RegExp(r'^([0-9A-F]{2}:){5}[0-9A-F]{2}$');
+
+/// Appareil bloqué sur le hotspot.
+class BlockedDevice {
+  const BlockedDevice({required this.id, required this.mac, required this.comment});
+  final String id;
+  final String mac;
+  final String comment;
+
+  factory BlockedDevice.fromRow(Map<String, String> r) => BlockedDevice(
+        id: r['.id'] ?? '',
+        mac: r['mac-address'] ?? '',
+        comment: r['comment'] ?? '',
+      );
+}
