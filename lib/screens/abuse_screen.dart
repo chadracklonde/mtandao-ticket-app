@@ -70,7 +70,6 @@ class AbuseScreen extends StatelessWidget {
         ],
       ),
     );
-    c.dispose();
     if (mac == null || !context.mounted) return;
     await _run(context, () => service.blockDevice(mac), reload, 'Appareil bloqué.');
   }

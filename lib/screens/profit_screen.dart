@@ -103,8 +103,6 @@ class _ProfitScreenState extends State<ProfitScreen> {
         ),
       ),
     );
-    label.dispose();
-    amount.dispose();
     if (item == null) return;
     await _store.save([...costs, item]);
     await reload();
