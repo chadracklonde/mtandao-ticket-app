@@ -119,10 +119,11 @@ class _HomeShellState extends State<HomeShell> {
         children: [
           ValueListenableBuilder<int>(
             valueListenable: _index,
-            builder: (context, index, _) => Container(
+            builder: (context, index, _) => SizedBox(
               width: 248,
-              color: scheme.surfaceContainerLow,
-              child: Column(
+              child: Material(
+                color: scheme.surfaceContainerLow,
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
@@ -177,6 +178,7 @@ class _HomeShellState extends State<HomeShell> {
                     ),
                   ),
                 ],
+                ),
               ),
             ),
           ),
