@@ -3,6 +3,7 @@ import 'dart:math';
 import '../models.dart';
 import '../routeros/api_client.dart';
 import '../util.dart';
+import 'announcement.dart';
 import 'hotspot_setup.dart';
 import 'profile_backup.dart';
 import 'speed.dart';
@@ -760,6 +761,112 @@ class MikhmonService {
       await client.run(['/system/scheduler/remove', '=.id=${r['.id']}']);
     }
   }
+
+  // ---- Annonce du jour sur la page de connexion ----------------------------------
+
+  /// Dossier de la page de connexion du hotspot (`hotspot` par défaut).
+  Future<String> hotspotHtmlDir() async {
+    try {
+      final hs = await client.run(['/ip/hotspot/print', '=.proplist=name,profile']);
+      final profile = hs.isEmpty ? '' : (hs.first['profile'] ?? '');
+      if (profile.isNotEmpty) {
+        final rows = await client.run(['/ip/hotspot/profile/print', '?name=$profile', '=.proplist=name,html-directory']);
+        final dir = rows.isEmpty ? '' : (rows.first['html-directory'] ?? '');
+        if (dir.isNotEmpty) return dir;
+      }
+    } on RouterOsException {
+      // On retombe sur le dossier par défaut.
+    }
+    return 'hotspot';
+  }
+
+  Future<Map<String, String>?> _file(String name) async {
+    final rows = await client.run(['/file/print', '?name=$name', '=.proplist=.id,name,size,contents']);
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  Future<void> _writeFile(String name, String contents) async {
+    final f = await _file(name);
+    if (f == null) {
+      await client.run(['/file/add', '=name=$name', '=contents=$contents']);
+    } else {
+      await client.run(['/file/set', '=.id=${f['.id']}', '=contents=$contents']);
+    }
+  }
+
+  /// État de l'annonce : page préparée ou non, et annonce en ligne.
+  Future<AnnounceState> announcementState() async {
+    final dir = await hotspotHtmlDir();
+    final login = await _file('$dir/login.html');
+    if (login == null) return const AnnounceState(loginFound: false, installed: false);
+    final html = login['contents'] ?? '';
+    final installed = hasAnnounceLoader(html);
+    Announcement? current;
+    if (installed) {
+      final js = await _file('$dir/$announceFileName');
+      if (js != null) current = parseAnnounceScript(js['contents'] ?? '');
+    }
+    return AnnounceState(
+      loginFound: true,
+      installed: installed,
+      readable: html.isNotEmpty,
+      current: current,
+    );
+  }
+
+  /// Prépare la page de connexion : copie de l'original puis ajout du chargeur.
+  Future<void> installAnnouncement() async {
+    final dir = await hotspotHtmlDir();
+    final login = await _file('$dir/login.html');
+    if (login == null) {
+      throw RouterOsException('La page de connexion ($dir/login.html) est introuvable sur le routeur.');
+    }
+    final html = login['contents'] ?? '';
+    if (html.isEmpty) {
+      throw RouterOsException(
+          'Le routeur ne laisse pas lire la page de connexion (fichier trop grand). '
+          'Ajoutez à la main, juste après la balise <body> de $dir/login.html, cette ligne :\n$announceLoader');
+    }
+    if (hasAnnounceLoader(html)) return;
+    final changed = insertAnnounceLoader(html);
+    if (changed == null) {
+      throw RouterOsException('La page de connexion n\'a pas de balise <body> : modification impossible.');
+    }
+    await _writeFile('$dir/login.html.avant-annonce', html);
+    await _writeFile('$dir/$announceFileName', buildAnnounceScript(const Announcement(text: '', kind: AnnounceKind.info)));
+    await _writeFile('$dir/login.html', changed);
+  }
+
+  /// Publie l'annonce (prépare la page si besoin). Un texte vide la retire.
+  Future<void> setAnnouncement(Announcement a) async {
+    if (a.text.trim().length > announceMaxLength) {
+      throw RouterOsException('L\'annonce est trop longue (au plus $announceMaxLength caractères).');
+    }
+    final state = await announcementState();
+    if (!state.installed) await installAnnouncement();
+    final dir = await hotspotHtmlDir();
+    await _writeFile('$dir/$announceFileName', buildAnnounceScript(a));
+  }
+
+  /// Rend la page de connexion comme avant (retire le chargeur).
+  Future<void> uninstallAnnouncement() async {
+    final dir = await hotspotHtmlDir();
+    final login = await _file('$dir/login.html');
+    if (login == null) return;
+    final html = login['contents'] ?? '';
+    if (!hasAnnounceLoader(html)) return;
+    await _writeFile('$dir/login.html', removeAnnounceLoader(html));
+    final js = await _file('$dir/$announceFileName');
+    if (js != null) await client.run(['/file/remove', '=.id=${js['.id']}']);
+  }
+}
+
+class AnnounceState {
+  const AnnounceState({required this.loginFound, required this.installed, this.readable = true, this.current});
+  final bool loginFound;
+  final bool installed;
+  final bool readable;
+  final Announcement? current;
 }
 
 class AutoBackup {
