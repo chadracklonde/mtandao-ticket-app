@@ -55,6 +55,8 @@ class FakeRouter {
     '/user': <Map<String, String>>[],
     '/system/script': scripts,
     '/ip/dns': <Map<String, String>>[],
+    '/system/scheduler': <Map<String, String>>[],
+    '/file': <Map<String, String>>[],
   };
   Map<String, String> resource = {
     'cpu-load': '7',

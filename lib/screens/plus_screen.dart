@@ -15,6 +15,7 @@ import 'network_screen.dart';
 import 'search_screen.dart';
 import 'profiles_screen.dart';
 import 'security_screen.dart';
+import 'usage_screen.dart';
 import 'ticket_layout_screen.dart';
 import 'users_screen.dart';
 
@@ -65,6 +66,8 @@ class PlusScreen extends StatelessWidget {
           'Mise en page du ticket', () => TicketLayoutScreen(session: session)),
       (Icons.speed, 'Vitesse et équité', 'Bande passante partagée, connexions par appareil',
           'Vitesse et équité', () => NetworkScreen(service: service)),
+      (Icons.leaderboard_outlined, 'Qui consomme le plus', 'Débit de chaque client en direct, ralentir ou bloquer',
+          'Qui consomme le plus', () => UsageScreen(service: service)),
       (Icons.monitor_heart_outlined, 'Surveillance', 'Processeur, mémoire, trafic en direct',
           'Surveillance', () => MonitorScreen(service: service)),
       (Icons.devices_outlined, 'Appareils (DHCP)', 'Les appareils connus du routeur', 'Appareils',
@@ -126,7 +129,7 @@ class PlusScreen extends StatelessWidget {
     return ListView(
       children: [
         for (var i = 0; i < items.length; i++) ...[
-          if (i == 6 || i == 10 || i == 13) const Divider(),
+          if (i == 6 || i == 10 || i == 14) const Divider(),
           tile(items[i].$1, items[i].$2, items[i].$3, items[i].$4, items[i].$5),
         ],
       ],

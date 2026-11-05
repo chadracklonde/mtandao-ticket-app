@@ -24,6 +24,32 @@ class BackupScreen extends StatefulWidget {
 
 class _BackupScreenState extends State<BackupScreen> {
   bool _busy = false;
+  AutoBackup? _auto;
+  Object? _autoError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAuto();
+  }
+
+  Future<void> _loadAuto() async {
+    try {
+      final a = await widget.service.autoBackup();
+      if (mounted) setState(() => _auto = a);
+    } catch (e) {
+      if (mounted) setState(() => _autoError = e);
+    }
+  }
+
+  Future<void> _setAuto(Duration? every) => _guard(() async {
+        if (every == null) {
+          await widget.service.disableAutoBackup();
+        } else {
+          await widget.service.enableAutoBackup(every);
+        }
+        await _loadAuto();
+      });
 
   Future<void> _guard(Future<void> Function() action) async {
     setState(() => _busy = true);
@@ -96,6 +122,19 @@ class _BackupScreenState extends State<BackupScreen> {
         );
       });
 
+  String _autoLabel(AutoBackup a) {
+    final every = a.interval;
+    final plan = !a.enabled
+        ? 'Pas de sauvegarde automatique.'
+        : every == null
+            ? 'Sauvegarde automatique active.'
+            : every >= const Duration(days: 7)
+                ? 'Sauvegarde automatique active : chaque semaine.'
+                : 'Sauvegarde automatique active : chaque nuit.';
+    final l = a.last;
+    return l == null ? plan : '$plan Dernier fichier : ${formatDate(l)} à ${formatTime(l)}.';
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
@@ -128,6 +167,39 @@ class _BackupScreenState extends State<BackupScreen> {
           icon: const Icon(Icons.router_outlined),
           label: const Text('Sauvegarder le routeur'),
         ),
+        const SizedBox(height: 28),
+        Text('Sauvegarde automatique', style: t.titleMedium),
+        const SizedBox(height: 4),
+        Text(
+          'Le routeur fait lui-même une sauvegarde chaque nuit à 3 h, ou chaque semaine, même téléphone éteint. '
+          'Le fichier mtandao-auto est remplacé à chaque fois : copiez-le de temps en temps avec Winbox (menu Files).',
+          style: t.bodySmall,
+        ),
+        const SizedBox(height: 12),
+        if (_auto == null && _autoError == null) const LinearProgressIndicator(),
+        if (_autoError != null) Text('Impossible de lire l\'état : ${describeError(_autoError!)}', style: t.bodySmall),
+        if (_auto != null) ...[
+          Text(_autoLabel(_auto!), style: t.bodyMedium),
+          if (_auto!.lateAt(DateTime.now()))
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text('Attention : la dernière sauvegarde est plus ancienne que prévu. Vérifiez l\'heure du routeur.',
+                  style: t.bodySmall?.copyWith(color: Colors.orange.shade800)),
+            ),
+          const SizedBox(height: 8),
+          Wrap(spacing: 8, runSpacing: 4, children: [
+            FilledButton.tonal(
+              onPressed: _busy ? null : () => _setAuto(const Duration(days: 1)),
+              child: const Text('Chaque nuit'),
+            ),
+            FilledButton.tonal(
+              onPressed: _busy ? null : () => _setAuto(const Duration(days: 7)),
+              child: const Text('Chaque semaine'),
+            ),
+            if (_auto!.enabled)
+              OutlinedButton(onPressed: _busy ? null : () => _setAuto(null), child: const Text('Arrêter')),
+          ]),
+        ],
         if (_busy) ...[
           const SizedBox(height: 20),
           const LinearProgressIndicator(),

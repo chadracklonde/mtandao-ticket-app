@@ -5,6 +5,7 @@ import '../routeros/api_client.dart';
 import '../util.dart';
 import 'hotspot_setup.dart';
 import 'profile_backup.dart';
+import 'speed.dart';
 
 enum CodeCharset { digits, lower, mixed }
 
@@ -668,5 +669,110 @@ class MikhmonService {
     final lines = (rows.first['source'] ?? '').split('\n').where((l) => l.contains('|')).toList();
     await _undo(lines);
     await client.run(['/system/script/remove', '=.id=${rows.first['.id']}']);
+  }
+
+  // ---- Ralentir un appareil ---------------------------------------------------
+
+  static const slowComment = 'mkm-ralenti';
+
+  /// Adresses IP actuellement ralenties par l'application.
+  Future<Set<String>> slowedAddresses() async {
+    final rows = await client.run(['/queue/simple/print', '?comment=$slowComment', '=.proplist=.id,target']);
+    return {for (final r in rows) (r['target'] ?? '').split('/').first};
+  }
+
+  /// Limite le débit d'un appareil (ex. `256k`). La règle est placée en tête pour
+  /// passer avant les files dynamiques du hotspot.
+  Future<void> slowDevice(String address, {String rate = '256k'}) async {
+    if (!RegExp(r'^\d{1,3}(\.\d{1,3}){3}$').hasMatch(address)) {
+      throw RouterOsException('Adresse invalide : $address');
+    }
+    if (!isValidRate(rate)) throw RouterOsException('Débit invalide. Exemples : 256k, 512k, 1M.');
+    if ((await slowedAddresses()).contains(address)) return;
+    final first = await client.run(['/queue/simple/print', '=.proplist=.id']);
+    await client.run([
+      '/queue/simple/add',
+      '=name=$slowComment-$address',
+      '=target=$address/32',
+      '=max-limit=${normalizeRate(rate)}',
+      '=comment=$slowComment',
+      if (first.isNotEmpty) '=place-before=${first.first['.id']}',
+    ]);
+  }
+
+  Future<void> unslowDevice(String address) async {
+    final rows = await client.run(['/queue/simple/print', '?comment=$slowComment', '=.proplist=.id,target']);
+    for (final r in rows) {
+      if ((r['target'] ?? '').split('/').first == address) {
+        await client.run(['/queue/simple/remove', '=.id=${r['.id']}']);
+      }
+    }
+  }
+
+  // ---- Sauvegarde automatique (faite par le routeur lui-même) --------------
+
+  static const autoBackupName = 'mkm-backup';
+  static const autoBackupFile = 'mtandao-auto';
+
+  /// Sauvegarde automatique du routeur : intervalle et date du dernier fichier.
+  Future<AutoBackup> autoBackup() async {
+    final sched = await client.run([
+      '/system/scheduler/print',
+      '?name=$autoBackupName',
+      '=.proplist=.id,interval,disabled',
+    ]);
+    DateTime? last;
+    try {
+      final files = await client.run(['/file/print', '?name=$autoBackupFile.backup', '=.proplist=name,creation-time']);
+      if (files.isNotEmpty) {
+        final ct = (files.first['creation-time'] ?? '').trim().split(RegExp(r'\s+'));
+        if (ct.length == 2) last = parseRouterDateTime(ct[0], ct[1]);
+      }
+    } on RouterOsException {
+      // Liste des fichiers inaccessible : on ignore.
+    }
+    if (sched.isEmpty) return AutoBackup(enabled: false, interval: null, last: last);
+    final disabled = sched.first['disabled'] == 'true' || sched.first['disabled'] == 'yes';
+    return AutoBackup(
+      enabled: !disabled,
+      interval: parseRouterDuration(sched.first['interval'] ?? ''),
+      last: last,
+    );
+  }
+
+  /// Programme (ou reprogramme) la sauvegarde automatique toutes les [every].
+  Future<void> enableAutoBackup(Duration every) async {
+    if (every < const Duration(hours: 12)) throw RouterOsException('Intervalle trop court.');
+    await disableAutoBackup();
+    await client.run([
+      '/system/scheduler/add',
+      '=name=$autoBackupName',
+      '=interval=${toRouterDuration(every)}',
+      '=start-time=03:00:00',
+      '=on-event=/system backup save name=$autoBackupFile; /export file=$autoBackupFile',
+      '=comment=mkm',
+    ]);
+  }
+
+  Future<void> disableAutoBackup() async {
+    final rows = await client.run(['/system/scheduler/print', '?name=$autoBackupName', '=.proplist=.id']);
+    for (final r in rows) {
+      await client.run(['/system/scheduler/remove', '=.id=${r['.id']}']);
+    }
+  }
+}
+
+class AutoBackup {
+  const AutoBackup({required this.enabled, required this.interval, required this.last});
+  final bool enabled;
+  final Duration? interval;
+  final DateTime? last;
+
+  /// Vrai si la sauvegarde est programmée mais ne s'est pas faite à temps.
+  bool lateAt(DateTime now) {
+    if (!enabled || interval == null) return false;
+    final l = last;
+    if (l == null) return false;
+    return now.difference(l) > interval! * 2;
   }
 }
