@@ -192,7 +192,8 @@ class _SecurityScreenState extends State<SecurityScreen> {
           Text(
             'Garde dans la barre de notifications les ventes du jour, le nombre d\'appareils connectés '
             'et les profils à court de tickets, mis à jour chaque minute, même application fermée. '
-            'Elle consomme un peu de batterie et de données.',
+            'Elle consomme un peu de batterie et de données. Le même texte peut s\'afficher sur l\'écran '
+            'd\'accueil : appuyez longuement sur l\'écran, choisissez Widgets, puis Mtandao Ticket.',
             style: t.bodySmall,
           ),
           SwitchListTile(

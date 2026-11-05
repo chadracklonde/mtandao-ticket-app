@@ -8,6 +8,7 @@ import 'backup_screen.dart';
 import 'cash_screen.dart';
 import 'profit_screen.dart';
 import 'quick_sale_screen.dart';
+import 'diagnosis_screen.dart';
 import 'hotspot_setup_screen.dart';
 import 'monitor_screen.dart';
 import 'network_screen.dart';
@@ -46,6 +47,8 @@ class PlusScreen extends StatelessWidget {
     final items = <(IconData, String, String, String, Widget Function())>[
       (Icons.search, 'Rechercher un ticket', 'Par code, appareil, montant ou heure de vente', 'Recherche',
           () => SearchScreen(service: service, session: session)),
+      (Icons.health_and_safety_outlined, 'Ce ticket ne marche pas', 'Trouver la cause et réparer, ou remplacer',
+          'Ce ticket ne marche pas', () => DiagnosisScreen(service: service, session: session)),
       (Icons.bolt, 'Vente rapide', 'Un ticket à envoyer par WhatsApp ou SMS', 'Vente rapide',
           () => QuickSaleScreen(service: service, session: session)),
       (Icons.lock_clock, 'Clôture de caisse', 'Attendu contre encaissé, tickets à vérifier',
@@ -123,7 +126,7 @@ class PlusScreen extends StatelessWidget {
     return ListView(
       children: [
         for (var i = 0; i < items.length; i++) ...[
-          if (i == 5 || i == 9 || i == 12) const Divider(),
+          if (i == 6 || i == 10 || i == 13) const Divider(),
           tile(items[i].$1, items[i].$2, items[i].$3, items[i].$4, items[i].$5),
         ],
       ],

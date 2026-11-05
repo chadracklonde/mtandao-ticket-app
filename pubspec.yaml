@@ -20,6 +20,7 @@ dependencies:
   share_plus: ^10.1.4
   file_selector: ^1.0.3
   flutter_foreground_task: ^8.17.0
+  home_widget: ^0.7.0
 
 dev_dependencies:
   flutter_test:

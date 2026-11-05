@@ -66,6 +66,17 @@ jobs:
           sed -i 's|</application>|    <meta-data android:name="cd.xsoftdesign.mtandao_ticket.NOTIFICATION_ICON" android:resource="@drawable/ic_stat_wifi"/>\n    </application>|' "$f"
           mkdir -p android/app/src/main/res/drawable
           cp android_extras/ic_stat_wifi.xml android/app/src/main/res/drawable/ic_stat_wifi.xml
+          # Widget d'accueil
+          w=android/app/src/main/res
+          mkdir -p $w/layout $w/xml $w/values android/app/src/main/kotlin/cd/xsoftdesign/mtandao_ticket
+          cp android_extras/widget/mtandao_widget.xml $w/layout/mtandao_widget.xml
+          cp android_extras/widget/mtandao_widget_bg.xml $w/drawable/mtandao_widget_bg.xml
+          cp android_extras/widget/mtandao_widget_info.xml $w/xml/mtandao_widget_info.xml
+          cp android_extras/widget/mtandao_widget_strings.xml $w/values/mtandao_widget_strings.xml
+          cp android_extras/widget/LiveWidgetProvider.kt android/app/src/main/kotlin/cd/xsoftdesign/mtandao_ticket/LiveWidgetProvider.kt
+          sed -i 's|</application>|    <receiver android:name=".LiveWidgetProvider" android:exported="true"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/mtandao_widget_info"/></receiver>\n    </application>|' "$f"
+          grep -n 'LiveWidgetProvider' "$f"
+          ls android/app/src/main/kotlin/cd/xsoftdesign/mtandao_ticket/
           grep -n 'android:label' "$f"
           flutter pub get
           rm -f flutter_launcher_icons-windows.yaml flutter_launcher_icons-macos.yaml

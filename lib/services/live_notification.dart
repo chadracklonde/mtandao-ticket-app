@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models.dart';
 import '../routeros/api_client.dart';
 import 'live_stats.dart';
+import 'live_widget.dart';
 import 'mikhmon_service.dart';
 import 'session_store.dart';
 import 'stock_alert.dart';
@@ -113,6 +114,7 @@ class LiveNotification {
     try {
       await FlutterForegroundTask.stopService();
     } catch (_) {}
+    await LiveWidget.clear();
   }
 
   /// À l'ouverture de l'application : relance le service s'il a été arrêté
@@ -181,10 +183,10 @@ class _LiveHandler extends TaskHandler {
         }
       } catch (_) {}
       final stats = computeLiveStats(sales, active.length, DateTime.now(), lowStock: low);
-      FlutterForegroundTask.updateService(
-        notificationTitle: liveTitle(stats, s.currency),
-        notificationText: liveBody(stats),
-      );
+      final title = liveTitle(stats, s.currency);
+      final body = liveBody(stats);
+      FlutterForegroundTask.updateService(notificationTitle: title, notificationText: body);
+      await LiveWidget.push(title, body);
     } catch (_) {
       _client?.close();
       _client = null;
