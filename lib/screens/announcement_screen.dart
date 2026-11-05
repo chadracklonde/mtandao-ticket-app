@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../models.dart';
 import '../services/announcement.dart';
 import '../services/mikhmon_service.dart';
 import '../util.dart';
