@@ -121,8 +121,11 @@ void main() {
       await wait();
       expect(find.text('calme'), findsOneWidget);
       // Le 2e client télécharge beaucoup entre deux relevés.
-      router.active[1]['bytes-out'] = '90000000';
-      await wait(30);
+      // Le débit doit durer : on fait grossir le compteur à chaque instant.
+      for (var i = 0; i < 30; i++) {
+        router.active[1]['bytes-out'] = '${90000000 + i * 5000000}';
+        await wait(1);
+      }
       final first = tester.getTopLeft(find.text('gourmand')).dy;
       final second = tester.getTopLeft(find.text('calme')).dy;
       expect(first, lessThan(second));
