@@ -75,6 +75,20 @@ jobs:
           exit ${PIPESTATUS[0]}
       - name: Nommer l'APK
         run: cp build/app/outputs/flutter-apk/app-release.apk mtandao-ticket-test.apk
+      - name: Signer l'APK avec la clé de publication (si les secrets existent)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then echo "Pas de clé de publication : APK signé avec la clé de test."; exit 0; fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          bt=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$bt/apksigner" sign --ks "$RUNNER_TEMP/release.jks" --ks-key-alias "$KEY_ALIAS" \
+            --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEY_PASSWORD mtandao-ticket-test.apk
+          "$bt/apksigner" verify --print-certs mtandao-ticket-test.apk | grep -i "SHA-256"
+          rm -f "$RUNNER_TEMP/release.jks"
       - uses: actions/upload-artifact@v4
         with:
           name: mtandao-ticket-apk
