@@ -75,6 +75,8 @@ jobs:
           cp android_extras/widget/mtandao_widget_strings.xml $w/values/mtandao_widget_strings.xml
           cp android_extras/widget/LiveWidgetProvider.kt android/app/src/main/kotlin/cd/xsoftdesign/mtandao_ticket/LiveWidgetProvider.kt
           sed -i 's|</application>|    <receiver android:name=".LiveWidgetProvider" android:exported="true"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/mtandao_widget_info"/></receiver>\n    </application>|' "$f"
+          # Service de la notification permanente (obligatoire pour flutter_foreground_task)
+          sed -i 's|</application>|    <service android:name="com.pravera.flutter_foreground_task.service.ForegroundService" android:foregroundServiceType="dataSync" android:exported="false"/>\n    </application>|' "$f"
           grep -n 'LiveWidgetProvider' "$f"
           # Empreinte digitale : l'activité doit être un FragmentActivity et le thème AppCompat
           cp android_extras/MainActivity.kt android/app/src/main/kotlin/cd/xsoftdesign/mtandao_ticket/MainActivity.kt
@@ -88,7 +90,7 @@ jobs:
           rm -f flutter_launcher_icons-windows.yaml flutter_launcher_icons-macos.yaml
           dart run flutter_launcher_icons 2>&1 | tee /tmp/logs/02-icons.txt
           grep -q "Successfully" /tmp/logs/02-icons.txt && ls android/app/src/main/res/mipmap-hdpi/ic_launcher.png
-          flutter build apk --release 2>&1 | tee /tmp/logs/05-apk.txt
+          flutter build apk --release --no-shrink 2>&1 | tee /tmp/logs/05-apk.txt
           exit ${PIPESTATUS[0]}
       - name: Nommer l'APK
         run: cp build/app/outputs/flutter-apk/app-release.apk mtandao-ticket-test.apk
