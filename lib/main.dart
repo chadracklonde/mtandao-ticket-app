@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'services/live_notification.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'screens/sessions_screen.dart';
@@ -37,6 +38,8 @@ ThemeData _buildTheme(Brightness brightness) {
 }
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  LiveNotification.initPort();
   runApp(const MtandaoApp());
 }
 
