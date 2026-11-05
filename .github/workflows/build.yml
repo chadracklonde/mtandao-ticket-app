@@ -145,7 +145,7 @@ jobs:
       - name: Compiler pour Windows
         env:
           # local_auth_windows utilise une ancienne option du compilateur : on tait l'erreur
-          CXXFLAGS: /D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
+          CXXFLAGS: -D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
         run: |
           mkdir -p /tmp/logs
           flutter config --enable-windows-desktop
