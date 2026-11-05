@@ -128,6 +128,56 @@ jobs:
           git commit -q -m "journaux apk du $GITHUB_SHA"
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-logs-apk
 
+  emulator:
+    # Essai de l'APK sur un téléphone virtuel : quand le message du commit contient [emu]
+    if: contains(github.event.head_commit.message, '[emu]')
+    needs: apk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mtandao-ticket-apk
+      - name: Activer KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Script d'essai
+        run: |
+          mkdir -p /tmp/emu
+          cat > emu.sh <<'EOS'
+          #!/bin/sh
+          adb install -r mtandao-ticket-test.apk > /tmp/emu/install.txt 2>&1
+          adb logcat -c
+          adb shell monkey -p cd.xsoftdesign.mtandao_ticket -c android.intent.category.LAUNCHER 1 > /tmp/emu/monkey.txt 2>&1
+          sleep 30
+          adb logcat -d > /tmp/emu/logcat.txt 2>&1
+          adb shell pidof cd.xsoftdesign.mtandao_ticket > /tmp/emu/pid.txt 2>&1 || echo "AUCUN PROCESSUS : l'application s'est arretee" > /tmp/emu/pid.txt
+          adb exec-out screencap -p > /tmp/emu/ecran.png
+          adb shell dumpsys window | grep -i "mCurrentFocus" > /tmp/emu/focus.txt 2>&1
+          exit 0
+          EOS
+          chmod +x emu.sh
+      - name: Lancer l'application sur l'émulateur
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: sh ./emu.sh
+      - name: Publier les journaux (branche ci-logs-emu)
+        if: always()
+        run: |
+          grep -n "AndroidRuntime\|FATAL\|Exception\|flutter" /tmp/emu/logcat.txt | head -300 > /tmp/emu/resume.txt || true
+          rm -rf /tmp/pub && mkdir /tmp/pub && cp /tmp/emu/* /tmp/pub/ && cd /tmp/pub
+          echo "$GITHUB_SHA" > commit.txt
+          git config --global user.name 'ci'
+          git config --global user.email 'ci@users.noreply.github.com'
+          git init -q && git checkout -q -b ci-logs-emu && git add -A
+          git commit -q -m "journaux emulateur du $GITHUB_SHA"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-logs-emu
+
   windows:
     # Windows : quand le message du commit contient [desktop]
     if: contains(github.event.head_commit.message, '[desktop]')
