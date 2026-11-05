@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AppLock {
   static const _hashKey = 'lock_hash';
   static const _saltKey = 'lock_salt';
+  static const _bioKey = 'lock_biometric';
 
   static bool validPin(String pin) => RegExp(r'^[0-9]{4,8}$').hasMatch(pin);
 
@@ -37,8 +38,24 @@ class AppLock {
     return _hash(salt, pin) == hash;
   }
 
+  /// Déverrouillage par empreinte, en plus du code (qui reste toujours possible).
+  Future<bool> biometricEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_bioKey) ?? false;
+  }
+
+  Future<void> setBiometricEnabled(bool on) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (on) {
+      await prefs.setBool(_bioKey, true);
+    } else {
+      await prefs.remove(_bioKey);
+    }
+  }
+
   Future<void> disable() async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_bioKey);
     await prefs.remove(_hashKey);
     await prefs.remove(_saltKey);
   }

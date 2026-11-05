@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/app_lock.dart';
+import '../services/biometric.dart';
 
 /// Recouvre l'application d'un écran de code quand le verrouillage est actif :
 /// au démarrage, et quand l'application est restée plus de [delay] en arrière-plan.
@@ -9,11 +10,13 @@ class LockGate extends StatefulWidget {
     super.key,
     required this.child,
     this.lock,
+    this.biometrics = const DeviceBiometricAuth(),
     this.delay = const Duration(seconds: 30),
   });
 
   final Widget child;
   final AppLock? lock;
+  final BiometricAuth biometrics;
   final Duration delay;
 
   @override
@@ -73,7 +76,11 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
             child: Overlay(
               initialEntries: [
                 OverlayEntry(
-                  builder: (_) => LockScreen(lock: _lock, onUnlock: () => setState(() => _locked = false)),
+                  builder: (_) => LockScreen(
+                    lock: _lock,
+                    biometrics: widget.biometrics,
+                    onUnlock: () => setState(() => _locked = false),
+                  ),
                 ),
               ],
             ),
@@ -84,9 +91,15 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
 }
 
 class LockScreen extends StatefulWidget {
-  const LockScreen({super.key, required this.lock, required this.onUnlock});
+  const LockScreen({
+    super.key,
+    required this.lock,
+    required this.onUnlock,
+    this.biometrics = const DeviceBiometricAuth(),
+  });
 
   final AppLock lock;
+  final BiometricAuth biometrics;
   final VoidCallback onUnlock;
 
   @override
@@ -98,11 +111,34 @@ class _LockScreenState extends State<LockScreen> {
   String? _error;
   int _failures = 0;
   DateTime? _blockedUntil;
+  bool _bio = false;
+  bool _asking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startBiometric();
+  }
 
   @override
   void dispose() {
     _pin.dispose();
     super.dispose();
+  }
+
+  /// Propose l'empreinte dès l'affichage ; le code reste toujours possible.
+  Future<void> _startBiometric() async {
+    if (!await widget.lock.biometricEnabled() || !await widget.biometrics.isAvailable()) return;
+    if (mounted) setState(() => _bio = true);
+    await _askBiometric();
+  }
+
+  Future<void> _askBiometric() async {
+    if (_asking) return;
+    _asking = true;
+    final ok = await widget.biometrics.authenticate('Déverrouiller Mtandao Ticket');
+    _asking = false;
+    if (ok && mounted) widget.onUnlock();
   }
 
   Future<void> _submit() async {
@@ -166,6 +202,14 @@ class _LockScreenState extends State<LockScreen> {
                   ),
                   const SizedBox(height: 20),
                   FilledButton(onPressed: _submit, child: const Text('Déverrouiller')),
+                  if (_bio) ...[
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: _askBiometric,
+                      icon: const Icon(Icons.fingerprint, color: Colors.white),
+                      label: const Text('Utiliser l\'empreinte', style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
                 ],
               ),
             ),

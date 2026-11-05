@@ -60,7 +60,7 @@ jobs:
           f=android/app/src/main/AndroidManifest.xml
           grep -q 'android.permission.INTERNET' "$f" || sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <application|' "$f"
           sed -i 's|android:label="mtandao_ticket"|android:label="Mtandao Ticket"|' "$f"
-          for p in FOREGROUND_SERVICE FOREGROUND_SERVICE_DATA_SYNC POST_NOTIFICATIONS WAKE_LOCK; do
+          for p in FOREGROUND_SERVICE FOREGROUND_SERVICE_DATA_SYNC POST_NOTIFICATIONS WAKE_LOCK USE_BIOMETRIC; do
             grep -q "android.permission.$p\"" "$f" || sed -i "s|<application|<uses-permission android:name=\"android.permission.$p\"/>\n    <application|" "$f"
           done
           sed -i 's|</application>|    <meta-data android:name="cd.xsoftdesign.mtandao_ticket.NOTIFICATION_ICON" android:resource="@drawable/ic_stat_wifi"/>\n    </application>|' "$f"
@@ -76,6 +76,12 @@ jobs:
           cp android_extras/widget/LiveWidgetProvider.kt android/app/src/main/kotlin/cd/xsoftdesign/mtandao_ticket/LiveWidgetProvider.kt
           sed -i 's|</application>|    <receiver android:name=".LiveWidgetProvider" android:exported="true"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/mtandao_widget_info"/></receiver>\n    </application>|' "$f"
           grep -n 'LiveWidgetProvider' "$f"
+          # Empreinte digitale : l'activité doit être un FragmentActivity et le thème AppCompat
+          cp android_extras/MainActivity.kt android/app/src/main/kotlin/cd/xsoftdesign/mtandao_ticket/MainActivity.kt
+          for st in $w/values/styles.xml $w/values-night/styles.xml; do
+            [ -f "$st" ] && sed -i 's|@android:style/Theme.Light.NoTitleBar|@style/Theme.AppCompat.Light.NoActionBar|; s|@android:style/Theme.Black.NoTitleBar|@style/Theme.AppCompat.NoActionBar|' "$st"
+          done
+          cat $w/values/styles.xml | head -12
           ls android/app/src/main/kotlin/cd/xsoftdesign/mtandao_ticket/
           grep -n 'android:label' "$f"
           flutter pub get

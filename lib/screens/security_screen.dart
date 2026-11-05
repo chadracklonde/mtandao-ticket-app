@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models.dart';
 import '../services/app_lock.dart';
+import '../services/biometric.dart';
 import '../services/live_notification.dart';
 import '../services/stock_alert.dart';
 import '../util.dart';
@@ -9,7 +10,9 @@ import '../widgets/desktop.dart';
 
 /// Code de verrouillage de l'application et seuil d'alerte de stock.
 class SecurityScreen extends StatefulWidget {
-  const SecurityScreen({super.key, this.session});
+  const SecurityScreen({super.key, this.session, this.biometrics = const DeviceBiometricAuth()});
+
+  final BiometricAuth biometrics;
 
   /// Routeur courant : permet d'activer la notification permanente.
   final Session? session;
@@ -25,6 +28,8 @@ class _SecurityScreenState extends State<SecurityScreen> {
   bool _enabled = false;
   int _threshold = StockAlertStore.defaultThreshold;
   bool _live = false;
+  bool _bioAvailable = false;
+  bool _bio = false;
 
   @override
   void initState() {
@@ -36,11 +41,15 @@ class _SecurityScreenState extends State<SecurityScreen> {
     final on = await _lock.isEnabled();
     final th = await _stock.load();
     final liveId = await LiveNotification.enabledFor();
+    final bioAvail = await widget.biometrics.isAvailable();
+    final bio = await _lock.biometricEnabled();
     if (mounted) {
       setState(() {
         _enabled = on;
         _threshold = th;
         _live = liveId != null && liveId == widget.session?.id;
+        _bioAvailable = bioAvail;
+        _bio = bio;
         _loaded = true;
       });
     }
@@ -106,13 +115,25 @@ class _SecurityScreenState extends State<SecurityScreen> {
     }
   }
 
+  Future<void> _toggleBio(bool on) async {
+    if (on && !await widget.biometrics.authenticate('Confirmez avec votre empreinte')) {
+      if (mounted) showMessage(context, 'Empreinte non reconnue : réglage inchangé.');
+      return;
+    }
+    await _lock.setBiometricEnabled(on);
+    if (mounted) setState(() => _bio = on);
+  }
+
   Future<void> _disable() async {
     final pin = await _askPin('Entrez votre code pour désactiver');
     if (pin == null) return;
     if (await _lock.verify(pin)) {
       await _lock.disable();
       if (mounted) {
-        setState(() => _enabled = false);
+        setState(() {
+          _enabled = false;
+          _bio = false;
+        });
         showMessage(context, 'Verrouillage désactivé');
       }
     } else if (mounted) {
@@ -159,6 +180,15 @@ class _SecurityScreenState extends State<SecurityScreen> {
             leading: const Icon(Icons.password),
             title: const Text('Changer le code'),
             onTap: _change,
+          ),
+        if (_enabled && _bioAvailable)
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            secondary: const Icon(Icons.fingerprint),
+            title: const Text('Déverrouiller par empreinte'),
+            subtitle: const Text('Le code reste toujours possible.'),
+            value: _bio,
+            onChanged: _toggleBio,
           ),
         const SizedBox(height: 24),
         Text('Alerte de stock', style: t.titleMedium),
