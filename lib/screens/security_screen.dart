@@ -30,6 +30,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
   bool _live = false;
   bool _bioAvailable = false;
   bool _bio = false;
+  BioKind _bioKind = BioKind.fingerprint;
 
   @override
   void initState() {
@@ -43,6 +44,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
     final liveId = await LiveNotification.enabledFor();
     final bioAvail = await widget.biometrics.isAvailable();
     final bio = await _lock.biometricEnabled();
+    final bioKind = await widget.biometrics.kind();
     if (mounted) {
       setState(() {
         _enabled = on;
@@ -50,6 +52,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
         _live = liveId != null && liveId == widget.session?.id;
         _bioAvailable = bioAvail;
         _bio = bio;
+        _bioKind = bioKind;
         _loaded = true;
       });
     }
@@ -116,8 +119,8 @@ class _SecurityScreenState extends State<SecurityScreen> {
   }
 
   Future<void> _toggleBio(bool on) async {
-    if (on && !await widget.biometrics.authenticate('Confirmez avec votre empreinte')) {
-      if (mounted) showMessage(context, 'Empreinte non reconnue : réglage inchangé.');
+    if (on && !await widget.biometrics.authenticate('Confirmez pour activer le déverrouillage biométrique')) {
+      if (mounted) showMessage(context, 'Non reconnu : réglage inchangé.');
       return;
     }
     await _lock.setBiometricEnabled(on);
@@ -185,7 +188,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             secondary: const Icon(Icons.fingerprint),
-            title: const Text('Déverrouiller par empreinte'),
+            title: Text('Déverrouiller par ${_bioKind.by}'),
             subtitle: const Text('Le code reste toujours possible.'),
             value: _bio,
             onChanged: _toggleBio,

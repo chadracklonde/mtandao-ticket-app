@@ -12,6 +12,11 @@ class FakeBio implements BiometricAuth {
   bool accepts;
   int asked = 0;
 
+  BioKind shown = BioKind.fingerprint;
+
+  @override
+  Future<BioKind> kind() async => shown;
+
   @override
   Future<bool> isAvailable() async => available;
 
@@ -76,6 +81,18 @@ void main() {
         MaterialApp(home: LockGate(lock: lock, biometrics: FakeBio(), child: const Text('contenu'))));
     await settle(tester);
     expect(find.text('Utiliser l\'empreinte'), findsNothing);
+  });
+
+  testWidgets('visage : les textes le disent', (tester) async {
+    final lock = AppLock();
+    await lock.setPin('1234');
+    await lock.setBiometricEnabled(true);
+    final bio = FakeBio(accepts: false)..shown = BioKind.both;
+    await tester.pumpWidget(MaterialApp(home: LockGate(lock: lock, biometrics: bio, child: const Text('contenu'))));
+    await settle(tester);
+    expect(find.text('Utiliser l\'empreinte ou le visage'), findsOneWidget);
+    expect(BioKind.face.by, 'visage');
+    expect(BioKind.face.use, 'le visage');
   });
 
   testWidgets('réglages : activer l\'empreinte demande une confirmation', (tester) async {

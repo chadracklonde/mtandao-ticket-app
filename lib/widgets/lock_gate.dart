@@ -113,6 +113,7 @@ class _LockScreenState extends State<LockScreen> {
   DateTime? _blockedUntil;
   bool _bio = false;
   bool _asking = false;
+  BioKind _kind = BioKind.fingerprint;
 
   @override
   void initState() {
@@ -129,7 +130,13 @@ class _LockScreenState extends State<LockScreen> {
   /// Propose l'empreinte dès l'affichage ; le code reste toujours possible.
   Future<void> _startBiometric() async {
     if (!await widget.lock.biometricEnabled() || !await widget.biometrics.isAvailable()) return;
-    if (mounted) setState(() => _bio = true);
+    final kind = await widget.biometrics.kind();
+    if (mounted) {
+      setState(() {
+        _bio = true;
+        _kind = kind;
+      });
+    }
     await _askBiometric();
   }
 
@@ -207,7 +214,7 @@ class _LockScreenState extends State<LockScreen> {
                     TextButton.icon(
                       onPressed: _askBiometric,
                       icon: const Icon(Icons.fingerprint, color: Colors.white),
-                      label: const Text('Utiliser l\'empreinte', style: TextStyle(color: Colors.white)),
+                      label: Text('Utiliser ${_kind.use}', style: const TextStyle(color: Colors.white)),
                     ),
                   ],
                 ],
