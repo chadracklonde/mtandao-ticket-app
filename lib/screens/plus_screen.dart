@@ -72,8 +72,8 @@ class PlusScreen extends StatelessWidget {
           'Installer un hotspot', () => HotspotSetupScreen(service: service, session: session)),
       (Icons.backup_outlined, 'Sauvegarde', 'Profils et sauvegarde du routeur', 'Sauvegarde',
           () => BackupScreen(service: service, session: session)),
-      (Icons.lock_outline, 'Sécurité et alertes', 'Code de verrouillage, stock bas', 'Sécurité et alertes',
-          () => const SecurityScreen()),
+      (Icons.lock_outline, 'Sécurité et alertes', 'Code de verrouillage, stock bas, notification permanente', 'Sécurité et alertes',
+          () => SecurityScreen(session: session)),
     ];
 
     if (isDesktopPlatform) {

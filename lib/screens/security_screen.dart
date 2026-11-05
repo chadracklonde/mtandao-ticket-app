@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../models.dart';
 import '../services/app_lock.dart';
+import '../services/live_notification.dart';
 import '../services/stock_alert.dart';
 import '../util.dart';
 import '../widgets/desktop.dart';
 
 /// Code de verrouillage de l'application et seuil d'alerte de stock.
 class SecurityScreen extends StatefulWidget {
-  const SecurityScreen({super.key});
+  const SecurityScreen({super.key, this.session});
+
+  /// Routeur courant : permet d'activer la notification permanente.
+  final Session? session;
 
   @override
   State<SecurityScreen> createState() => _SecurityScreenState();
@@ -19,6 +24,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
   bool _loaded = false;
   bool _enabled = false;
   int _threshold = StockAlertStore.defaultThreshold;
+  bool _live = false;
 
   @override
   void initState() {
@@ -29,10 +35,12 @@ class _SecurityScreenState extends State<SecurityScreen> {
   Future<void> _load() async {
     final on = await _lock.isEnabled();
     final th = await _stock.load();
+    final liveId = await LiveNotification.enabledFor();
     if (mounted) {
       setState(() {
         _enabled = on;
         _threshold = th;
+        _live = liveId != null && liveId == widget.session?.id;
         _loaded = true;
       });
     }
@@ -177,8 +185,39 @@ class _SecurityScreenState extends State<SecurityScreen> {
             ),
           ],
         ),
+        if (widget.session != null && LiveNotification.supported) ...[
+          const SizedBox(height: 24),
+          Text('Notification permanente', style: t.titleMedium),
+          const SizedBox(height: 4),
+          Text(
+            'Garde dans la barre de notifications les ventes du jour, le nombre d\'appareils connectés '
+            'et les profils à court de tickets, mis à jour chaque minute, même application fermée. '
+            'Elle consomme un peu de batterie et de données.',
+            style: t.bodySmall,
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text('Afficher pour « ${widget.session!.name} »'),
+            value: _live,
+            onChanged: _toggleLive,
+          ),
+        ],
       ],
     ));
+  }
+
+  Future<void> _toggleLive(bool on) async {
+    if (on) {
+      final err = await LiveNotification.enable(widget.session!);
+      if (!mounted) return;
+      if (err != null) {
+        showMessage(context, err);
+        return;
+      }
+    } else {
+      await LiveNotification.disable();
+    }
+    if (mounted) setState(() => _live = on);
   }
 
   Future<void> _setThreshold(int v) async {

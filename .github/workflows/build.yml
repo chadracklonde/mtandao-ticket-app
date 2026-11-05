@@ -60,6 +60,12 @@ jobs:
           f=android/app/src/main/AndroidManifest.xml
           grep -q 'android.permission.INTERNET' "$f" || sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <application|' "$f"
           sed -i 's|android:label="mtandao_ticket"|android:label="Mtandao Ticket"|' "$f"
+          for p in FOREGROUND_SERVICE FOREGROUND_SERVICE_DATA_SYNC POST_NOTIFICATIONS WAKE_LOCK; do
+            grep -q "android.permission.$p\"" "$f" || sed -i "s|<application|<uses-permission android:name=\"android.permission.$p\"/>\n    <application|" "$f"
+          done
+          sed -i 's|</application>|    <meta-data android:name="cd.xsoftdesign.mtandao_ticket.NOTIFICATION_ICON" android:resource="@drawable/ic_stat_wifi"/>\n    </application>|' "$f"
+          mkdir -p android/app/src/main/res/drawable
+          cp android_extras/ic_stat_wifi.xml android/app/src/main/res/drawable/ic_stat_wifi.xml
           grep -n 'android:label' "$f"
           flutter pub get
           rm -f flutter_launcher_icons-windows.yaml flutter_launcher_icons-macos.yaml

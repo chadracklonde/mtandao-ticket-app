@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models.dart';
+import '../services/live_notification.dart';
 import '../services/mikhmon_service.dart';
 import '../widgets/desktop.dart';
 import 'active_screen.dart';
@@ -36,6 +37,12 @@ class _HomeShellState extends State<HomeShell> {
   final _index = ValueNotifier<int>(0);
   final Set<int> _visited = {0};
   final _paneNavigator = GlobalKey<NavigatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    LiveNotification.resumeIfEnabled();
+  }
 
   @override
   void dispose() {
