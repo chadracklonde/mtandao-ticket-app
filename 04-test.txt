@@ -1,0 +1,192 @@
+
+::group::✅ Passing tests
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/setup_test.dart: plan d'installation plage d'adresses
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/setup_test.dart: plan d'installation garde l'adresse existante et crée le reste
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/setup_test.dart: plan d'installation refus clairs
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/setup_test.dart: routeur simulé : installation installation puis annulation
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/setup_test.dart: routeur simulé : installation échec : ce qui a été créé est retiré
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/setup_test.dart: routeur simulé : installation écran : plan affiché puis installation
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/app_test.dart: premier lancement : aucun routeur enregistré
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/app_test.dart: le formulaire de routeur s'ouvre avec les valeurs par défaut
+::endgroup::
+::group::✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/voucher_pdf_test.dart: PDF de 100 tickets (code unique)
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+::endgroup::
+::group::✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/voucher_pdf_test.dart: PDF avec utilisateur et mot de passe, sans page de connexion
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/router_client_test.dart: connexion (T1) identification simple (RouterOS 6.43 et 7)
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/router_client_test.dart: connexion (T1) mauvais mot de passe : message clair
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/router_client_test.dart: connexion (T1) identification par défi MD5 (RouterOS avant 6.43)
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/router_client_test.dart: connexion (T1) défi MD5 avec mauvais mot de passe
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/router_client_test.dart: connexion (T1) routeur injoignable : message lisible
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/router_client_test.dart: commandes erreur du routeur renvoyée telle quelle
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/router_client_test.dart: commandes reconnexion automatique après une coupure
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/router_client_test.dart: commandes commandes en parallèle : exécutées l'une après l'autre
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/usage_backup_test.dart: débits en direct calcul et classement
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/usage_backup_test.dart: débits en direct compteur remis à zéro, session nouvelle, durée nulle
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/usage_backup_test.dart: débits en direct affichage des vitesses
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/usage_backup_test.dart: routeur simulé ralentir puis rétablir un appareil
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/usage_backup_test.dart: routeur simulé sauvegarde automatique : programmer, lire, arrêter
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/desktop_layout_test.dart: ordinateur : barre latérale, deux colonnes, écrans secondaires dans le contenu
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/usage_backup_test.dart: routeur simulé écran : classement et ralentir
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/intelligence_screens_test.dart: accueil : ventes du jour, connectés, points à vérifier, stock
+::endgroup::
+::group::✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/sales_export_test.dart: PDF du rapport : valide, même vide
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/sales_export_test.dart: Excel du rapport : fichier xlsx avec les ventes
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/sales_export_test.dart: nom de fichier sûr
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/insights_test.dart: prévision de stock rythme, jours restants et quantité conseillée
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/insights_test.dart: prévision de stock profil qui ne se vend pas : pas de rupture annoncée, rien à générer
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/insights_test.dart: prévision de stock stock vide et ventes récentes : critique
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/insights_test.dart: prévision de stock les profils les plus urgents sont en premier
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/insights_test.dart: rapprochement de caisse ticket payant utilisé sans vente
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/intelligence_screens_test.dart: caisse : écart saisi puis clôture enregistrée
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/insights_test.dart: rapprochement de caisse clôtures enregistrées, remplacées par jour et relues
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/insights_test.dart: détection d'abus ticket partagé : un même ticket sur deux appareils
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/insights_test.dart: détection d'abus gros consommateur : au moins le seuil et trois fois la moyenne des autres
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/insights_test.dart: détection d'abus rien d'anormal
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/insights_test.dart: bénéfice net encaissé moins coûts mensuels et par ticket
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/insights_test.dart: bénéfice net coûts conservés par routeur
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/insights_test.dart: vente rapide message pour le client
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/insights_test.dart: appareils bloqués (routeur simulé) bloquer coupe la session, lister, débloquer, MAC invalide refusée
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/data_size_test.dart: conversion des tailles saisies
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/data_size_test.dart: libellés
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/data_size_test.dart: la limite de données du profil est relue depuis le routeur
+::endgroup::
+::group::✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/features_test.dart: mise en page des tickets toutes les mises en page produisent un PDF
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+::endgroup::
+::group::✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/features_test.dart: mise en page des tickets le rouleau donne un autre document que la feuille A4
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/features_test.dart: mise en page des tickets mise en page enregistrée puis relue
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/features_test.dart: sauvegarde profils : export puis relecture
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/features_test.dart: sauvegarde un fichier quelconque est refusé
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/features_test.dart: routeur restaurer des profils : création puis mise à jour
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/features_test.dart: routeur sauvegarde du routeur
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/features_test.dart: routeur surveillance : ressources, interfaces, trafic, journal, appareils
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/features_test.dart: verrouillage code enregistré en empreinte, vérifié, désactivé
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/intelligence_screens_test.dart: abus : ticket partagé signalé, appareil bloqué puis débloqué
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/features_test.dart: verrouillage écran de code au démarrage puis déverrouillage
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/features_test.dart: verrouillage sans code, aucun écran de verrouillage
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/features_test.dart: alerte de stock bas
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/features_test.dart: vérification du certificat enregistrée avec le routeur
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/on_login_script_test.dart: script on-login forme correcte et lecture de la limite sur le ticket
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/on_login_script_test.dart: script on-login expiration programmée à partir de la limite du ticket
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/on_login_script_test.dart: script on-login la vente garde le format date-|-heure-|-ticket-|-prix-|-ip-|-mac-|-durée-|-profil-|-lot
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/on_login_script_test.dart: script on-login le détecteur repère un script cassé
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/on_login_script_test.dart: script on-login prix et limite par défaut relus depuis le routeur
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/on_login_script_test.dart: script on-login profils créés par une version précédente (sans validité)
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/announcement_test.dart: page et script d'annonce insertion après <body>, une seule fois, et retrait exact
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/announcement_test.dart: page et script d'annonce script : texte protégé, relu par l'application
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/announcement_test.dart: page et script d'annonce expiration et annonce vide
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/announcement_test.dart: page et script d'annonce durées
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/intelligence_screens_test.dart: bénéfice net : un coût ajouté fait baisser le résultat
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/announcement_test.dart: routeur simulé préparer, publier, retirer, tout remettre
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/announcement_test.dart: routeur simulé dossier du profil, page absente, page illisible, texte trop long
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/intelligence_screens_test.dart: vente rapide : un ticket est créé sur le routeur et affiché
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/announcement_test.dart: routeur simulé écran : préparer puis publier
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/single_ticket_test.dart: cleanNote garde un texte simple
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/single_ticket_test.dart: ticket sur mesure code, mot de passe, appareil, durée, données et nom
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/single_ticket_test.dart: ticket sur mesure code seul : le mot de passe est identique
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/single_ticket_test.dart: ticket sur mesure code déjà pris
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/single_ticket_test.dart: ticket sur mesure entrées invalides refusées
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/single_ticket_test.dart: ticket sur mesure écran : création puis affichage du ticket
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/sales_extras_test.dart: montants par jour et par heure
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/sales_extras_test.dart: variation par rapport à la période précédente
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/sales_extras_test.dart: effacer des ventes du journal du routeur
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/sales_report_test.dart: rapport du jour
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/sales_report_test.dart: rapport du mois : bornes incluses, mois voisins exclus
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/sales_report_test.dart: rapport d'une période choisie
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/sales_report_test.dart: dates inversées : la période est remise dans l'ordre
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/sales_report_test.dart: totaux par profil, du plus rentable au moins rentable
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/sales_report_test.dart: période sans vente
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/sales_report_test.dart: mois de février d'une année bissextile
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: vitesses lecture et écriture des débits
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: vitesses limite complète : départ rapide et minimum garanti
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: vitesses relecture : on retrouve ce qu'on a écrit
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: vitesses réseau d'une adresse
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: profil : lier le ticket à l'appareil le script ne lie l'appareil que si demandé, et la case est relue
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: routeur simulé : bande passante et connexions l'enveloppe commune est créée, rattachée aux profils, retirée
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: routeur simulé : bande passante et connexions modifier un profil conserve son enveloppe
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: routeur simulé : bande passante et connexions limite de connexions : règle placée en premier, mise à jour, retirée
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: routeur simulé : bande passante et connexions un ticket lié à un appareil peut être libéré
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: recherche par code, avec sa vente et sa session
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: recherche par heure et montant : ventes vers 14 h à 500
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: recherche par appareil : tickets liés, ventes et appareil du DHCP
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: recherche requête vide ou sans résultat
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/home_shell_test.dart: parcours : générer, actifs, ventes, profils
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/service_test.dart: profils (T2) création puis relecture du prix et de la durée
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/service_test.dart: profils (T2) modification d'un profil existant
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/service_test.dart: profils (T2) noms et durées invalides refusés
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/service_test.dart: profils (T2) limite de temps choisie à la génération (F19)
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/service_test.dart: profils (T2) limite de données et vitesse (F20)
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/service_test.dart: profils (T2) suppression
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/service_test.dart: génération (T3, T4) 100 tickets, tous différents
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/service_test.dart: génération (T3, T4) mode identifiant + mot de passe
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/service_test.dart: génération (T3, T4) code déjà pris sur le routeur : un autre code est essayé
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: écrans recherche : on retrouve un ticket par heure et montant, puis on agit
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/service_test.dart: génération (T3, T4) plus de code libre : message clair
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/service_test.dart: génération (T3, T4) coupure au milieu : les tickets déjà créés restent sur le routeur
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/service_test.dart: lots regroupés par lot et profil, tickets utilisés exclus
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/service_test.dart: actifs (T6) liste puis déconnexion
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/service_test.dart: ventes (T7, T8) une vente par ticket, même s'il se reconnecte (simulation du script)
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/service_test.dart: ventes (T7, T8) ventes triées de la plus récente à la plus ancienne, dates RouterOS 6 et 7
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/desktop_support_test.dart: dossier d'enregistrement sur ordinateur
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/desktop_support_test.dart: connexions enregistrées même sans stockage sécurisé
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/api_codec_test.dart: encodeLength vecteurs connus du protocole
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/api_codec_test.dart: lecture aller-retour de longueurs
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/api_codec_test.dart: lecture phrase !re puis !done
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/api_codec_test.dart: lecture lecture en plusieurs morceaux
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/api_codec_test.dart: ventes date RouterOS 6
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/api_codec_test.dart: ventes date RouterOS 7
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/api_codec_test.dart: ventes nom invalide
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/api_codec_test.dart: profil lecture du prix et de la durée
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: écrans vitesse et équité : activer l'enveloppe et la limite de connexions
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/users_test.dart: durées RouterOS
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/users_test.dart: état d'un utilisateur
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/users_test.dart: utilisateurs sur le routeur liste complète triée
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/users_test.dart: utilisateurs sur le routeur désactiver, réactiver, remise à zéro, suppression
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/users_test.dart: utilisateurs sur le routeur prolonger le temps et les données
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/users_test.dart: utilisateurs sur le routeur prolonger un ticket illimité est refusé
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/equipment_test.dart: écrans formulaire de profil : départ rapide, minimum garanti et liaison relus puis enregistrés
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/biometric_test.dart: réglage empreinte enregistré, effacé avec le verrouillage
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/live_stats_test.dart: ne compte que les ventes du jour
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/live_stats_test.dart: textes de la notification
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/live_stats_test.dart: journée vide
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/biometric_test.dart: l'empreinte déverrouille sans taper le code
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/biometric_test.dart: empreinte refusée : le code reste possible
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/diagnosis_test.dart: diagnostic de ticket ticket valide : pas de problème
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/diagnosis_test.dart: diagnostic de ticket désactivé, épuisé, lié à un appareil
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/diagnosis_test.dart: diagnostic de ticket appareil bloqué
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/diagnosis_test.dart: diagnostic de ticket supprimé après vente : expiré, remplaçable
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/diagnosis_test.dart: diagnostic de ticket code inconnu, faute de frappe, majuscules
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/biometric_test.dart: sans capteur ou sans réglage, pas de bouton empreinte
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/biometric_test.dart: visage : les textes le disent
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/diagnosis_test.dart: écran trouve un ticket désactivé et le réactive
+✅ /home/runner/work/mtandao-ticket-app/mtandao-ticket-app/test/biometric_test.dart: réglages : activer l'empreinte demande une confirmation
+::endgroup::
+
+🎉 154 tests passed.
