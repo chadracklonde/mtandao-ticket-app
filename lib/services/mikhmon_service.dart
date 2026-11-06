@@ -21,6 +21,10 @@ class GenerateRequest {
     this.charset = CodeCharset.digits,
     this.timeLimit,
     this.dataLimit,
+    this.customCode = '',
+    this.customPassword = '',
+    this.bindMac = '',
+    this.note = '',
   });
 
   final HotspotProfile profile;
@@ -40,12 +44,31 @@ class GenerateRequest {
   /// Null : celle du profil. Vide : illimitée.
   final String? dataLimit;
 
+  /// Ticket unique « sur mesure » : code choisi (vide : code aléatoire), mot de passe
+  /// (vide : identique au code), appareil auquel lier le ticket, nom du client.
+  final String customCode;
+  final String customPassword;
+  final String bindMac;
+  final String note;
+
   String get effectiveDataLimit => (dataLimit ?? profile.dataLimit).trim();
 
   int? get dataLimitBytes => parseDataSize(effectiveDataLimit);
 
   String get effectiveTimeLimit => (timeLimit ?? profile.uptime).trim().toLowerCase();
 }
+
+/// Code ou mot de passe choisi à la main : lettres, chiffres, point, tiret, tiret bas.
+final RegExp customCodePattern = RegExp(r'^[A-Za-z0-9._-]{3,32}$');
+
+/// Garde seulement ce qui peut s'écrire sans danger dans le commentaire du routeur.
+String cleanNote(String note) => note
+    .replaceAll(RegExp(r"[^\p{L}\p{N} .'-]", unicode: true), '')
+    .replaceAll(RegExp(r'\s+'), ' ')
+    .trim()
+    .split('')
+    .take(30)
+    .join();
 
 /// La génération s'est arrêtée en cours de route (réseau coupé, routeur
 /// éteint…). Les tickets déjà créés existent sur le routeur.
@@ -155,16 +178,33 @@ class MikhmonService {
     if (r.effectiveDataLimit.isNotEmpty && r.dataLimitBytes == null) {
       throw RouterOsException('Limite de données invalide. Exemples : 500M, 1G, 2G.');
     }
+    final custom = r.customCode.trim();
+    if (custom.isNotEmpty) {
+      if (r.count != 1) throw RouterOsException('Un code choisi ne convient qu\'à un seul ticket.');
+      if (!customCodePattern.hasMatch(custom)) {
+        throw RouterOsException('Code invalide : 3 à 32 caractères parmi lettres, chiffres, point, tiret.');
+      }
+      final pw = r.customPassword.trim();
+      if (pw.isNotEmpty && !customCodePattern.hasMatch(pw)) {
+        throw RouterOsException('Mot de passe invalide : 3 à 32 caractères parmi lettres, chiffres, point, tiret.');
+      }
+    }
+    final mac = r.bindMac.trim().toUpperCase();
+    if (mac.isNotEmpty && !macPattern.hasMatch(mac)) {
+      throw RouterOsException('Adresse MAC invalide. Format : AA:BB:CC:DD:EE:FF.');
+    }
     final now = DateTime.now();
+    final note = cleanNote(r.note);
     final batch =
         '${two(now.day)}${two(now.month)}${two(now.year % 100)}-${two(now.hour)}${two(now.minute)}';
-    final comment = '${r.separate ? 'up' : 'vc'}-$batch';
+    final withPassword = r.separate || (custom.isNotEmpty && r.customPassword.trim().isNotEmpty);
+    final comment = '${withPassword ? 'up' : 'vc'}-$batch${note.isEmpty ? '' : ' $note'}';
     final alphabet = _alphabet(r.charset);
     final used = <String>{};
     final out = <Voucher>[];
 
     try {
-      await _generateInto(r, out, used, alphabet, comment, onProgress, maxAttempts);
+      await _generateInto(r, out, used, alphabet, comment, onProgress, maxAttempts, mac);
     } catch (e) {
       if (out.isEmpty) rethrow;
       throw GenerationInterrupted(out, r.count, describeError(e));
@@ -180,13 +220,17 @@ class MikhmonService {
     String comment,
     void Function(int done, int total)? onProgress,
     int maxAttempts,
+    String mac,
   ) async {
+    final custom = r.customCode.trim();
     for (var i = 0; i < r.count; i++) {
       var created = false;
       for (var attempt = 0; attempt < maxAttempts && !created; attempt++) {
-        final name = r.prefix + _randomCode(alphabet, r.length);
+        final name = custom.isNotEmpty ? custom : r.prefix + _randomCode(alphabet, r.length);
         if (used.contains(name)) continue;
-        final password = r.separate ? _randomCode(alphabet, r.length) : name;
+        final password = custom.isNotEmpty
+            ? (r.customPassword.trim().isEmpty ? name : r.customPassword.trim())
+            : (r.separate ? _randomCode(alphabet, r.length) : name);
         try {
           final reply = await client.exec([
             '/ip/hotspot/user/add',
@@ -196,6 +240,7 @@ class MikhmonService {
             '=comment=$comment',
             if (r.effectiveTimeLimit.isNotEmpty) '=limit-uptime=${r.effectiveTimeLimit}',
             if (r.dataLimitBytes != null) '=limit-bytes-total=${r.dataLimitBytes}',
+            if (mac.isNotEmpty) '=mac-address=$mac',
           ]);
           used.add(name);
           out.add(Voucher(
@@ -212,6 +257,9 @@ class MikhmonService {
         } on RouterOsException catch (e) {
           // Code déjà pris sur le routeur : on retente avec un autre code.
           if (!e.message.toLowerCase().contains('already have')) rethrow;
+          if (custom.isNotEmpty) {
+            throw RouterOsException('Le code « $custom » existe déjà. Choisissez-en un autre.');
+          }
         }
       }
       if (!created) {

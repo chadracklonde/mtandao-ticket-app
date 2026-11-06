@@ -6,6 +6,8 @@ import '../models.dart';
 import '../services/insights.dart';
 import '../services/mikhmon_service.dart';
 import '../util.dart';
+import '../widgets/open_page.dart';
+import 'single_ticket_screen.dart';
 import '../widgets/desktop.dart';
 
 /// Vente rapide : un seul ticket, prêt à envoyer au client (WhatsApp, SMS…).
@@ -140,6 +142,14 @@ class _QuickSaleScreenState extends State<QuickSaleScreen> {
                 ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.bolt),
             label: Text(v == null ? 'Créer le ticket' : 'Créer un autre ticket'),
+          ),
+          TextButton.icon(
+            onPressed: _busy
+                ? null
+                : () => openPage(context, 'Ticket sur mesure',
+                    SingleTicketScreen(service: widget.service, session: widget.session)),
+            icon: const Icon(Icons.tune),
+            label: const Text('Choisir la durée, le code, l\'appareil…'),
           ),
           if (v != null) ...[
             const SizedBox(height: 24),

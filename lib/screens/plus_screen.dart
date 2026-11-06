@@ -16,6 +16,7 @@ import 'network_screen.dart';
 import 'search_screen.dart';
 import 'profiles_screen.dart';
 import 'security_screen.dart';
+import 'single_ticket_screen.dart';
 import 'usage_screen.dart';
 import 'ticket_layout_screen.dart';
 import 'users_screen.dart';
@@ -49,6 +50,8 @@ class PlusScreen extends StatelessWidget {
     final items = <(IconData, String, String, String, Widget Function())>[
       (Icons.search, 'Rechercher un ticket', 'Par code, appareil, montant ou heure de vente', 'Recherche',
           () => SearchScreen(service: service, session: session)),
+      (Icons.tune, 'Ticket sur mesure', 'Un seul ticket : profil, durée, données, code, appareil',
+          'Ticket sur mesure', () => SingleTicketScreen(service: service, session: session)),
       (Icons.health_and_safety_outlined, 'Ce ticket ne marche pas', 'Trouver la cause et réparer, ou remplacer',
           'Ce ticket ne marche pas', () => DiagnosisScreen(service: service, session: session)),
       (Icons.bolt, 'Vente rapide', 'Un ticket à envoyer par WhatsApp ou SMS', 'Vente rapide',
@@ -132,7 +135,7 @@ class PlusScreen extends StatelessWidget {
     return ListView(
       children: [
         for (var i = 0; i < items.length; i++) ...[
-          if (i == 7 || i == 11 || i == 15) const Divider(),
+          if (i == 8 || i == 12 || i == 16) const Divider(),
           tile(items[i].$1, items[i].$2, items[i].$3, items[i].$4, items[i].$5),
         ],
       ],
