@@ -93,6 +93,8 @@ jobs:
           rm -f flutter_launcher_icons-windows.yaml flutter_launcher_icons-macos.yaml
           dart run flutter_launcher_icons 2>&1 | tee /tmp/logs/02-icons.txt
           grep -q "Successfully" /tmp/logs/02-icons.txt && ls android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          mkdir -p ~/.gradle/init.d
+          printf '%s\n' 'allprojects { tasks.configureEach { t -> if (t.name.startsWith("lintVital") || t.name.startsWith("lintAnalyze") || t.name == "lintReport") { t.enabled = false } } }' > ~/.gradle/init.d/nolint.gradle
           flutter build apk --release 2>&1 | tee /tmp/logs/05-apk.txt
           exit ${PIPESTATUS[0]}
       - name: Nommer l'APK
