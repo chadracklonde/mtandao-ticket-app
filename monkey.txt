@@ -1,0 +1,15 @@
+  bash arg: -p
+  bash arg: cd.xsoftdesign.mtandao_ticket
+  bash arg: -c
+  bash arg: android.intent.category.LAUNCHER
+  bash arg: 1
+args: [-p, cd.xsoftdesign.mtandao_ticket, -c, android.intent.category.LAUNCHER, 1]
+ arg: "-p"
+ arg: "cd.xsoftdesign.mtandao_ticket"
+ arg: "-c"
+ arg: "android.intent.category.LAUNCHER"
+ arg: "1"
+data="cd.xsoftdesign.mtandao_ticket"
+data="android.intent.category.LAUNCHER"
+Events injected: 1
+## Network stats: elapsed time=37ms (0ms mobile, 0ms wifi, 37ms not connected)
