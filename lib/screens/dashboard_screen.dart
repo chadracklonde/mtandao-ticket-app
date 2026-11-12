@@ -12,6 +12,7 @@ import 'cash_screen.dart';
 import 'profit_screen.dart';
 import 'quick_sale_screen.dart';
 import 'search_screen.dart';
+import 'single_ticket_screen.dart';
 
 class _Dash {
   _Dash({
@@ -264,6 +265,12 @@ class DashboardScreen extends StatelessWidget {
                       QuickSaleScreen(service: service, session: session)),
                   icon: const Icon(Icons.bolt),
                   label: const Text('Vente rapide'),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: () => openPage(context, 'Ticket sur mesure',
+                      SingleTicketScreen(service: service, session: session)),
+                  icon: const Icon(Icons.tune),
+                  label: const Text('Ticket sur mesure'),
                 ),
                 OutlinedButton.icon(
                   onPressed: () =>

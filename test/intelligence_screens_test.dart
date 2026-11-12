@@ -90,6 +90,7 @@ void main() {
     expect(find.textContaining('1 ticket(s) utilisé(s) sans vente'), findsOneWidget);
     expect(find.textContaining('24H : 1 en stock'), findsOneWidget);
     expect(find.text('Vente rapide'), findsOneWidget);
+    expect(find.text('Ticket sur mesure'), findsOneWidget);
     await stop(tester);
   });
 
