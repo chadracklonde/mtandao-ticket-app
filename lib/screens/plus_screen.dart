@@ -50,7 +50,7 @@ class PlusScreen extends StatelessWidget {
     final items = <(IconData, String, String, String, Widget Function())>[
       (Icons.search, 'Rechercher un ticket', 'Par code, appareil, montant ou heure de vente', 'Recherche',
           () => SearchScreen(service: service, session: session)),
-      (Icons.tune, 'Ticket sur mesure', 'Un seul ticket : profil, durée, données, code, appareil',
+      (Icons.tune, 'Ticket sur mesure', 'Ajouter un utilisateur : profil, durée, préfixe, code…',
           'Ticket sur mesure', () => SingleTicketScreen(service: service, session: session)),
       (Icons.health_and_safety_outlined, 'Ce ticket ne marche pas', 'Trouver la cause et réparer, ou remplacer',
           'Ce ticket ne marche pas', () => DiagnosisScreen(service: service, session: session)),

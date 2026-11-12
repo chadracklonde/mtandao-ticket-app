@@ -87,6 +87,15 @@ void main() {
       expect(t.router.hotspotUsers, isEmpty);
     });
 
+    test('préfixe, longueur et mots de passe distincts', () async {
+      final t = await setUp1();
+      await t.service.generate(const GenerateRequest(
+          profile: p, count: 1, prefix: 'VIP-', length: 8, charset: CodeCharset.lower, separate: true));
+      final u = t.router.hotspotUsers.single;
+      expect(u['name'], matches(RegExp(r'^VIP-[a-z]{8}$')));
+      expect(u['password'], isNot(u['name']));
+    });
+
     testWidgets('écran : création puis affichage du ticket', (tester) async {
       final t = await setUp1();
       await tester.runAsync(() async {
@@ -98,8 +107,10 @@ void main() {
           await Future<void>.delayed(const Duration(milliseconds: 50));
           await tester.pump();
         }
-        await tester.enterText(find.widgetWithText(TextFormField, 'Code choisi (facultatif)'), 'client7');
-        await tester.enterText(find.widgetWithText(TextFormField, 'Nom du client (facultatif)'), 'Marie');
+        await tester.tap(find.text('Je choisis le code'));
+        await tester.pump();
+        await tester.enterText(find.widgetWithText(TextFormField, 'Code (nom d\'utilisateur)'), 'client7');
+        await tester.enterText(find.widgetWithText(TextFormField, 'Commentaire / nom du client (facultatif)'), 'Marie');
         await tester.tap(find.text('Créer le ticket'));
         for (var i = 0; i < 30; i++) {
           await Future<void>.delayed(const Duration(milliseconds: 50));

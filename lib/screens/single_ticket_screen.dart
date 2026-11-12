@@ -28,6 +28,11 @@ class _SingleTicketScreenState extends State<SingleTicketScreen> {
   final _password = TextEditingController();
   final _mac = TextEditingController();
   final _note = TextEditingController();
+  final _prefix = TextEditingController();
+  bool _manual = false;
+  bool _separate = false;
+  int _length = 6;
+  CodeCharset _charset = CodeCharset.digits;
 
   List<HotspotProfile>? _profiles;
   String? _error;
@@ -45,7 +50,7 @@ class _SingleTicketScreenState extends State<SingleTicketScreen> {
 
   @override
   void dispose() {
-    for (final c in [_time, _data, _code, _password, _mac, _note]) {
+    for (final c in [_time, _data, _code, _password, _mac, _note, _prefix]) {
       c.dispose();
     }
     super.dispose();
@@ -93,8 +98,12 @@ class _SingleTicketScreenState extends State<SingleTicketScreen> {
         count: 1,
         timeLimit: _time.text.trim().toLowerCase(),
         dataLimit: _data.text.trim(),
-        customCode: _code.text.trim(),
-        customPassword: _password.text.trim(),
+        prefix: _manual ? '' : _prefix.text.trim(),
+        length: _length,
+        charset: _charset,
+        separate: !_manual && _separate,
+        customCode: _manual ? _code.text.trim() : '',
+        customPassword: _manual ? _password.text.trim() : '',
         bindMac: mac,
         note: _note.text,
       ));
@@ -253,43 +262,92 @@ class _SingleTicketScreenState extends State<SingleTicketScreen> {
               enabled: !_busy,
               maxLength: 30,
               decoration: const InputDecoration(
-                labelText: 'Nom du client (facultatif)',
+                labelText: 'Commentaire / nom du client (facultatif)',
                 helperText: 'Gardé dans le ticket : retrouvez-le avec la recherche',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 8),
-            TextFormField(
-              controller: _code,
-              enabled: !_busy,
-              autocorrect: false,
-              decoration: const InputDecoration(
-                labelText: 'Code choisi (facultatif)',
-                helperText: 'Vide = code aléatoire. Lettres, chiffres, point, tiret : 3 à 32 caractères',
-                border: OutlineInputBorder(),
-              ),
-              validator: (x) {
-                final s = (x ?? '').trim();
-                return (s.isNotEmpty && !customCodePattern.hasMatch(s)) ? 'Code invalide' : null;
-              },
+            SegmentedButton<bool>(
+              segments: const [
+                ButtonSegment(value: false, label: Text('Code automatique')),
+                ButtonSegment(value: true, label: Text('Je choisis le code')),
+              ],
+              selected: {_manual},
+              onSelectionChanged: _busy ? null : (x) => setState(() => _manual = x.first),
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _password,
-              enabled: !_busy,
-              autocorrect: false,
-              decoration: const InputDecoration(
-                labelText: 'Mot de passe choisi (facultatif)',
-                helperText: 'Vide = identique au code. Seulement avec un code choisi',
-                border: OutlineInputBorder(),
+            if (!_manual) ...[
+              TextFormField(
+                controller: _prefix,
+                enabled: !_busy,
+                autocorrect: false,
+                decoration: const InputDecoration(
+                  labelText: 'Préfixe (facultatif)',
+                  helperText: 'Ex. VIP- : le code devient VIP-482913',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (x) {
+                  final t = (x ?? '').trim();
+                  return (t.isNotEmpty && !RegExp(r'^[A-Za-z0-9_.\-]+$').hasMatch(t))
+                      ? 'Lettres, chiffres, point, tiret ou _ seulement'
+                      : null;
+                },
               ),
-              validator: (x) {
-                final s = (x ?? '').trim();
-                if (s.isEmpty) return null;
-                if (_code.text.trim().isEmpty) return 'Choisissez aussi un code';
-                return customCodePattern.hasMatch(s) ? null : 'Mot de passe invalide';
-              },
-            ),
+              const SizedBox(height: 16),
+              Text('Longueur du code : $_length'),
+              Slider(
+                value: _length.toDouble(),
+                min: 4,
+                max: 10,
+                divisions: 6,
+                label: '$_length',
+                onChanged: _busy ? null : (x) => setState(() => _length = x.round()),
+              ),
+              SegmentedButton<CodeCharset>(
+                segments: const [
+                  ButtonSegment(value: CodeCharset.digits, label: Text('123')),
+                  ButtonSegment(value: CodeCharset.lower, label: Text('abc')),
+                  ButtonSegment(value: CodeCharset.mixed, label: Text('ab12')),
+                ],
+                selected: {_charset},
+                onSelectionChanged: _busy ? null : (x) => setState(() => _charset = x.first),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Utilisateur et mot de passe distincts'),
+                subtitle: const Text('Sinon, un seul code sert aux deux'),
+                value: _separate,
+                onChanged: _busy ? null : (x) => setState(() => _separate = x),
+              ),
+            ] else ...[
+              TextFormField(
+                controller: _code,
+                enabled: !_busy,
+                autocorrect: false,
+                decoration: const InputDecoration(
+                  labelText: 'Code (nom d\'utilisateur)',
+                  helperText: 'Lettres, chiffres, point, tiret : 3 à 32 caractères',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (x) => customCodePattern.hasMatch((x ?? '').trim()) ? null : 'Code invalide',
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _password,
+                enabled: !_busy,
+                autocorrect: false,
+                decoration: const InputDecoration(
+                  labelText: 'Mot de passe (facultatif)',
+                  helperText: 'Vide = identique au code',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (x) {
+                  final t = (x ?? '').trim();
+                  return (t.isEmpty || customCodePattern.hasMatch(t)) ? null : 'Mot de passe invalide';
+                },
+              ),
+            ],
             const SizedBox(height: 16),
             TextFormField(
               controller: _mac,
