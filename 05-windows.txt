@@ -1,0 +1,2 @@
+Building Windows application...                                   157.1s
+√ Built build\windows\x64\runner\Release\mtandao_ticket.exe
