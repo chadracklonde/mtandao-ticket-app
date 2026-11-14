@@ -224,3 +224,37 @@ Questions pour cette étape :
 - [ ] Le routeur de la wifi zone a-t-il une adresse IP publique, ou est-il derrière un CGNAT ?
 - [ ] Quel modèle de routeur (architecture), et quelle version de RouterOS ?
 - [ ] Accepter de louer un petit serveur relais (coût mensuel) si le routeur n'a pas d'IP publique ?
+
+
+## 13. Articulation avec Mtandao Cloud et Mtandao Gateway
+
+Le présent cahier des charges reste le référentiel du périmètre local de Mtandao Ticket. Les exigences V1 décrites dans les sections précédentes ne sont pas automatiquement remplacées par les fonctions Cloud.
+
+### 13.1 Périmètre de Mtandao Ticket
+
+- Mtandao Ticket reste une application Flutter centrée sur la gestion locale du hotspot MikroTik.
+- Le mode local doit continuer à fonctionner lorsque Internet ou Mtandao Cloud est indisponible, dès lors que le téléphone peut joindre le routeur.
+- Le téléphone peut, dans une phase ultérieure, servir de passerelle temporaire pour des commandes Cloud lorsque l'application est active et autorisée.
+- La synchronisation Cloud, les rôles multi-utilisateurs, les paiements Mobile Money et le portail client sont des évolutions distinctes ; elles ne doivent pas être présentées comme des fonctions déjà livrées dans la V1 locale.
+
+### 13.2 Dépôts et responsabilités
+
+- Mtandao Ticket : https://github.com/chadracklonde/mtandao-ticket-app — application mobile Flutter, gestion locale, interface utilisateur et passerelle téléphone temporaire.
+- Mtandao Cloud : https://github.com/chadracklonde/mtandao-cloud — identité, sites, membres, API, données centrales, synchronisation, paiements et tableau de bord.
+- Mtandao Gateway : https://github.com/chadracklonde/mtandao-gateway — agent permanent Linux/Android, connexion sortante au Cloud et exécution locale des commandes RouterOS autorisées.
+
+### 13.3 Règles de cohérence
+
+1. RouterOS reste l'autorité pour l'état effectif du Hotspot et des sessions.
+2. Mtandao Ticket conserve le mode local et ne doit pas exiger une connexion Cloud pour ses fonctions locales essentielles.
+3. Le Cloud orchestre les opérations distantes ; il ne publie jamais les ports d'administration MikroTik sur Internet.
+4. Le Gateway n'exécute que des commandes typées, autorisées, signées et non expirées.
+5. Les paiements ne sont confirmés que par une preuve vérifiée côté serveur ; un ticket payé et son activation sur le routeur sont deux états distincts.
+6. Les contrats de synchronisation et de commandes sont versionnés dans le dépôt Cloud et doivent rester compatibles avec les clients.
+
+### 13.4 Documents de référence associés
+
+- Cahier des charges Mtandao Cloud : https://github.com/chadracklonde/mtandao-cloud/blob/main/docs/cahier-des-charges.md
+- Cahier des charges Mtandao Gateway : https://github.com/chadracklonde/mtandao-gateway/blob/main/docs/cahier-des-charges.md
+
+Toute évolution qui modifie les responsabilités ou les échanges entre les trois composants doit mettre à jour les documents concernés dans le même changement.
