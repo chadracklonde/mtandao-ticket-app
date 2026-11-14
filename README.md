@@ -98,3 +98,12 @@ test/                            tests du codec, des ventes et des profils
 
 Dernier APK de test : https://github.com/chadracklonde/mtandao-ticket-app/releases/tag/test-14
 (construit par GitHub Actions quand le message d'un commit contient `[apk]`).
+
+
+## Documentation des projets associés
+
+- [Cahier des charges Mtandao Ticket](docs/cahier-des-charges.md) — périmètre mobile local et articulation Cloud/Gateway.
+- [Cahier des charges Mtandao Cloud](https://github.com/chadracklonde/mtandao-cloud/blob/main/docs/cahier-des-charges.md).
+- [Cahier des charges Mtandao Gateway](https://github.com/chadracklonde/mtandao-gateway/blob/main/docs/cahier-des-charges.md).
+
+Mtandao Ticket conserve son périmètre local ; les fonctions Cloud et Gateway sont des composants associés, livrés selon leurs propres phases.
