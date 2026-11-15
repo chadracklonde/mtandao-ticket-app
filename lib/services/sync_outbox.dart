@@ -176,9 +176,9 @@ class SyncOutbox {
 
   Future<int> pendingCount({String? siteId}) async => _store.count(
         await _database,
-        finder: siteId == null
+        filter: siteId == null
             ? null
-            : Finder(filter: Filter.equals('site_id', siteId)),
+            : Filter.equals('site_id', siteId),
       );
 
   Future<List<SyncEvent>> pendingEvents({
@@ -196,7 +196,7 @@ class SyncOutbox {
             'next_attempt_at',
             DateTime.now().millisecondsSinceEpoch,
           ),
-          if (siteId != null) Filter.equals('event.site_id', siteId),
+          if (siteId != null) Filter.equals('site_id', siteId),
         ]),
       ),
     );
