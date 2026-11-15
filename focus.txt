@@ -1,0 +1,1 @@
+  mCurrentFocus=Window{3198f86 u0 cd.xsoftdesign.mtandao_ticket/cd.xsoftdesign.mtandao_ticket.MainActivity}
