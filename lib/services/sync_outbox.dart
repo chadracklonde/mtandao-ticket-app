@@ -174,19 +174,30 @@ class SyncOutbox {
     return event.id;
   }
 
-  Future<int> pendingCount() async => (await _store.count(await _database));
+  Future<int> pendingCount({String? siteId}) async => _store.count(
+        await _database,
+        finder: siteId == null
+            ? null
+            : Finder(filter: Filter.equals('event.site_id', siteId)),
+      );
 
-  Future<List<SyncEvent>> pendingEvents({int limit = maxBatchSize}) async {
+  Future<List<SyncEvent>> pendingEvents({
+    int limit = maxBatchSize,
+    String? siteId,
+  }) async {
     final db = await _database;
     final records = await _store.find(
       db,
       finder: Finder(
         sortOrders: [SortOrder('queued_at')],
         limit: limit,
-        filter: Filter.lessThanOrEquals(
-          'next_attempt_at',
-          DateTime.now().millisecondsSinceEpoch,
-        ),
+        filter: Filter.and([
+          Filter.lessThanOrEquals(
+            'next_attempt_at',
+            DateTime.now().millisecondsSinceEpoch,
+          ),
+          if (siteId != null) Filter.equals('event.site_id', siteId),
+        ]),
       ),
     );
     return records
@@ -239,12 +250,9 @@ class SyncOutbox {
     if (accessToken.isEmpty) throw ArgumentError('Access token is required');
     final ownsClient = client == null;
     final httpClient = client ?? http.Client();
-    final events = await pendingEvents();
+    final events = await pendingEvents(siteId: siteId);
     if (events.isEmpty) {
-      return SyncFlushResult(sent: 0, acknowledged: 0, pending: await pendingCount());
-    }
-    if (events.any((event) => event.siteId != siteId)) {
-      throw StateError('Outbox contains events for a different site');
+      return SyncFlushResult(sent: 0, acknowledged: 0, pending: await pendingCount(siteId: siteId));
     }
 
     try {
@@ -282,7 +290,7 @@ class SyncOutbox {
       return SyncFlushResult(
         sent: events.length,
         acknowledged: acknowledged.length,
-        pending: await pendingCount(),
+        pending: await pendingCount(siteId: siteId),
       );
     } catch (error) {
       await _recordFailure(events, error);
