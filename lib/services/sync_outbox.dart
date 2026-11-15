@@ -6,6 +6,33 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+
+/// Stable installation identity shared by all events from this app install.
+class SyncIdentity {
+  static const _deviceIdKey = 'mtandao_sync_device_id_v1';
+
+  static Future<String> deviceId() async {
+    final preferences = await SharedPreferences.getInstance();
+    final existing = preferences.getString(_deviceIdKey);
+    if (existing != null && existing.isNotEmpty) return existing;
+    final generated = _newUuidV4();
+    await preferences.setString(_deviceIdKey, generated);
+    return preferences.getString(_deviceIdKey) ?? generated;
+  }
+
+  static String _newUuidV4() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    final hex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
+        '${hex.substring(12, 16)}-${hex.substring(16, 20)}-'
+        '${hex.substring(20)}';
+  }
+}
 
 /// An event is immutable once enqueued: retries always send the same UUID.
 class SyncEvent {
