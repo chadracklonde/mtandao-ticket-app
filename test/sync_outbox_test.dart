@@ -120,7 +120,7 @@ void main() {
     expect(await outbox.pendingCount(), 1);
   });
 
-  test('refuses to send events belonging to another site', () async {
+  test('keeps other sites queued while synchronizing the active site', () async {
     await outbox.enqueue(
       siteId: 'site-other',
       deviceId: 'device-1',
@@ -128,21 +128,22 @@ void main() {
       payload: {'ticket_id': 'ticket-4'},
     );
     var called = false;
-    final client = MockClient((_) async {
+    final client = MockClient((request) async {
       called = true;
+      final body = jsonDecode(request.body) as Map<String, dynamic>;
+      expect(body['events'], isEmpty);
       return http.Response('{}', 200);
     });
 
-    await expectLater(
-      outbox.flush(
-        apiBaseUri: Uri.parse('https://cloud.example'),
-        siteId: 'site-1',
-        accessToken: 'jwt-token',
-        client: client,
-      ),
-      throwsStateError,
+    final result = await outbox.flush(
+      apiBaseUri: Uri.parse('https://cloud.example'),
+      siteId: 'site-1',
+      accessToken: 'jwt-token',
+      client: client,
     );
     expect(called, isFalse);
+    expect(result.sent, 0);
     expect(await outbox.pendingCount(), 1);
+    expect(await outbox.pendingCount(siteId: 'site-1'), 0);
   });
 }
