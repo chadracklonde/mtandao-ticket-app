@@ -100,6 +100,10 @@ Dernier APK de test : https://github.com/chadracklonde/mtandao-ticket-app/releas
 (construit par GitHub Actions quand le message d'un commit contient `[apk]`).
 
 
+## Synchronisation hors ligne
+
+- [File locale de synchronisation](docs/synchronisation-hors-ligne.md) — outbox persistante, événements idempotents, accusés et reprise.
+
 ## Documentation des projets associés
 
 - [Cahier des charges Mtandao Ticket](docs/cahier-des-charges.md) — périmètre mobile local et articulation Cloud/Gateway.
