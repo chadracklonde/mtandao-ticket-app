@@ -9,11 +9,12 @@ import 'package:mtandao_ticket/services/sync_outbox.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  var databaseNumber = 0;
 
   late SyncOutbox outbox;
 
   setUp(() async {
-    final db = await databaseFactoryMemory.openDatabase('sync-test');
+    final db = await databaseFactoryMemory.openDatabase('sync-test-${databaseNumber++}');
     outbox = SyncOutbox(database: db);
   });
 
