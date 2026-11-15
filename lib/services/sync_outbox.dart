@@ -248,13 +248,17 @@ class SyncOutbox {
     http.Client? client,
   }) async {
     if (accessToken.isEmpty) throw ArgumentError('Access token is required');
-    final ownsClient = client == null;
-    final httpClient = client ?? http.Client();
     final events = await pendingEvents(siteId: siteId);
     if (events.isEmpty) {
-      return SyncFlushResult(sent: 0, acknowledged: 0, pending: await pendingCount(siteId: siteId));
+      return SyncFlushResult(
+        sent: 0,
+        acknowledged: 0,
+        pending: await pendingCount(siteId: siteId),
+      );
     }
 
+    final ownsClient = client == null;
+    final httpClient = client ?? http.Client();
     try {
       final response = await httpClient
           .post(
