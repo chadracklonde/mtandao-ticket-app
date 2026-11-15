@@ -74,11 +74,11 @@ void main() {
 
   test('script : agrégation, nettoyage et absence de modification des profils', () {
     final script = TicketBandwidth.syncScript;
-    expect(script, contains('user=$username'));
-    expect(script, contains(':set targets ($targets,($ip . "/32"))'));
-    expect(script, contains('target=$targets'));
+    expect(script, contains(r'user=$username'));
+    expect(script, contains(r':set targets ($targets,($ip . "/32"))'));
+    expect(script, contains(r'target=$targets'));
     expect(script, contains('disabled=yes'));
-    expect(script, contains('/queue simple remove $q'));
+    expect(script, contains(r'/queue simple remove $q'));
     expect(script, isNot(contains('/ip hotspot user profile set')));
   });
 }
