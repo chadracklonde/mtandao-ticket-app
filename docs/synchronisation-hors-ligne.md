@@ -7,6 +7,7 @@ Le service `lib/services/sync_outbox.dart` fournit la première couche de synchr
 - Obtenir une identité stable de l'installation avec `SyncIdentity.deviceId()`.
 - Ajouter un événement avec `SyncOutbox.enqueue(...)` après une opération métier confirmée localement.
 - Appeler `SyncOutbox.flush(...)` lorsqu'un utilisateur authentifié et un site Cloud actif sont disponibles.
+- Utiliser `SyncCoordinator` pour déclencher la synchronisation au retour d'une connectivité et lors de contrôles périodiques (60 secondes par défaut). Le coordinateur reçoit les fournisseurs de site actif et de jeton ; il ne stocke aucun secret.
 - Fournir l'URL racine de l'API et le jeton d'accès Supabase de l'utilisateur courant.
 - Ne jamais supprimer manuellement les événements non acquittés.
 
