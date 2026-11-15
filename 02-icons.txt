@@ -1,0 +1,14 @@
+  ════════════════════════════════════════════
+     FLUTTER LAUNCHER ICONS (v0.14.4)                               
+  ════════════════════════════════════════════
+  
+
+Flavor: macos
+Creating Icons for MacOS...
+⚠️.\macos this file or folder is required to generate MacOS icons
+⚠️Requirements failed for platform MacOS. Skipped
+
+Flavor: windows
+Creating Icons for Windows...
+
+✓ Successfully generated launcher icons for flavors
