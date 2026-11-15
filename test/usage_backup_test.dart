@@ -132,6 +132,8 @@ void main() {
       expect(first, lessThan(second));
       await tester.tap(find.text('Ralentir').first);
       await wait();
+      await tester.tap(find.widgetWithText(FilledButton, 'Réduire'));
+      await wait();
       expect(router.queues.any((q) => q['comment'] == MikhmonService.slowComment && q['target'] == '10.5.50.22/32'),
           isTrue);
       expect(find.text('Ralenti'), findsOneWidget);
