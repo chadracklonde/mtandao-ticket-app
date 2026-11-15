@@ -164,6 +164,7 @@ class SyncOutbox {
     await _locked(() async {
       await _store.record(event.id).put(await _database, {
         'event': event.toJson(),
+        'site_id': siteId,
         'attempts': 0,
         'next_attempt_at': 0,
         'last_error': null,
@@ -177,7 +178,7 @@ class SyncOutbox {
         await _database,
         finder: siteId == null
             ? null
-            : Finder(filter: Filter.equals('event.site_id', siteId)),
+            : Finder(filter: Filter.equals('site_id', siteId)),
       );
 
   Future<List<SyncEvent>> pendingEvents({
