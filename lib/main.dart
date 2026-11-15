@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/live_notification.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'screens/sessions_screen.dart';
+import 'screens/cloud_access_screen.dart';
+import 'services/cloud_config.dart';
 import 'widgets/desktop.dart';
 import 'widgets/lock_gate.dart';
 
@@ -37,10 +40,26 @@ ThemeData _buildTheme(Brightness brightness) {
   );
 }
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   LiveNotification.initPort();
+  await CloudConfig.initialize();
   runApp(const MtandaoApp());
+}
+
+class CloudAuthGate extends StatelessWidget {
+  const CloudAuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<AuthState>(
+      stream: CloudConfig.client.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        final session = CloudConfig.client.auth.currentSession;
+        return session == null ? const CloudAccessScreen() : const CloudSitesScreen();
+      },
+    );
+  }
 }
 
 class MtandaoApp extends StatelessWidget {
@@ -73,7 +92,7 @@ class MtandaoApp extends StatelessWidget {
                 ),
               ),
       ),
-      home: const SessionsScreen(),
+      home: CloudConfig.isConfigured ? const CloudAuthGate() : const SessionsScreen(),
     );
   }
 }
