@@ -7,6 +7,7 @@ import '../services/live_usage.dart';
 import '../services/mikhmon_service.dart';
 import '../util.dart';
 import '../widgets/desktop.dart';
+import '../widgets/slow_dialog.dart';
 
 /// « Qui consomme le plus » : débit de chaque client connecté, mis à jour en
 /// direct, avec de quoi ralentir, déconnecter ou bloquer celui qui sature la ligne.
@@ -199,7 +200,11 @@ class _UsageScreenState extends State<UsageScreen> {
                 )
               else
                 OutlinedButton(
-                  onPressed: () => _do(() => widget.service.slowDevice(a.address), 'Appareil ralenti (256 kb/s)'),
+                  onPressed: () async {
+                    final rate = await askSlowRate(context, who: a.user);
+                    if (rate == null) return;
+                    await _do(() => widget.service.slowDevice(a.address, rate: rate), 'Vitesse réduite à $rate');
+                  },
                   child: const Text('Ralentir'),
                 ),
               OutlinedButton(

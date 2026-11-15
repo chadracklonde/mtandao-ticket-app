@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../models.dart';
+import '../routeros/api_client.dart';
 import '../services/insights.dart';
 import '../services/mikhmon_service.dart';
 import '../util.dart';
 import '../widgets/async_body.dart';
 import '../widgets/desktop.dart';
+import '../widgets/slow_dialog.dart';
 
 class _AbuseData {
-  _AbuseData(this.active, this.blocked);
+  _AbuseData(this.active, this.blocked, this.slowed);
   final List<ActiveUser> active;
   final List<BlockedDevice> blocked;
+  final Set<String> slowed;
 }
 
 /// Tickets partagés, gros consommateurs et appareils bloqués.
@@ -22,7 +25,13 @@ class AbuseScreen extends StatelessWidget {
   Future<_AbuseData> _load() async {
     final active = await service.activeUsers();
     final blocked = await service.blockedDevices();
-    return _AbuseData(active, blocked);
+    Set<String> slowed = {};
+    try {
+      slowed = await service.slowedAddresses();
+    } on RouterOsException {
+      // Files d'attente inaccessibles : on n'affiche simplement pas l'état « ralenti ».
+    }
+    return _AbuseData(active, blocked, slowed);
   }
 
   Future<void> _run(BuildContext context, Future<void> Function() action, Future<void> Function() reload,
@@ -133,7 +142,8 @@ class AbuseScreen extends StatelessWidget {
                             dense: true,
                             contentPadding: EdgeInsets.zero,
                             title: Text(s.mac.isEmpty ? s.address : '${s.mac} · ${s.address}'),
-                            subtitle: Text('${s.uptime} · ${formatBytes(s.bytesIn + s.bytesOut)}'),
+                            subtitle: Text(
+                                '${s.uptime} · ${formatBytes(s.bytesIn + s.bytesOut)}${data.slowed.contains(s.address) ? ' · ralenti' : ''}'),
                             trailing: Wrap(
                               children: [
                                 IconButton(
@@ -142,6 +152,24 @@ class AbuseScreen extends StatelessWidget {
                                   onPressed: () => _run(context, () => service.disconnect(s.id), reload,
                                       'Session coupée.'),
                                 ),
+                                if (data.slowed.contains(s.address))
+                                  IconButton(
+                                    tooltip: 'Rétablir la vitesse',
+                                    icon: Icon(Icons.speed, color: Colors.orange.shade800),
+                                    onPressed: () => _run(context, () => service.unslowDevice(s.address), reload,
+                                        'Vitesse rétablie.'),
+                                  )
+                                else
+                                  IconButton(
+                                    tooltip: 'Réduire la vitesse',
+                                    icon: const Icon(Icons.slow_motion_video),
+                                    onPressed: () async {
+                                      final rate = await askSlowRate(context, who: a.user);
+                                      if (rate == null || !context.mounted) return;
+                                      await _run(context, () => service.slowDevice(s.address, rate: rate), reload,
+                                          'Vitesse réduite à $rate.');
+                                    },
+                                  ),
                                 if (s.mac.isNotEmpty)
                                   IconButton(
                                     tooltip: 'Bloquer cet appareil',

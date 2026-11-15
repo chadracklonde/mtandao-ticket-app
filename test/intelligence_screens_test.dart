@@ -133,6 +133,28 @@ void main() {
     await stop(tester);
   });
 
+  testWidgets('abus : vitesse réduite puis rétablie', (tester) async {
+    await start(tester);
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(body: AbuseScreen(service: service)),
+    ));
+    await settle(tester);
+    await tester.tap(find.byTooltip('Réduire la vitesse').first);
+    await settle(tester, 5);
+    await tester.tap(find.text('512k'));
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Réduire'));
+    await settle(tester, 20);
+    final slow = router.queues.where((q) => q['comment'] == MikhmonService.slowComment);
+    expect(slow.length, 1);
+    expect(slow.single['max-limit'], '512k/512k');
+    expect(find.byTooltip('Rétablir la vitesse'), findsOneWidget);
+    await tester.tap(find.byTooltip('Rétablir la vitesse'));
+    await settle(tester, 20);
+    expect(router.queues.where((q) => q['comment'] == MikhmonService.slowComment), isEmpty);
+    await stop(tester);
+  });
+
   testWidgets('bénéfice net : un coût ajouté fait baisser le résultat', (tester) async {
     await start(tester);
     await tester.pumpWidget(MaterialApp(

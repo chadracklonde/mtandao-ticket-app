@@ -74,9 +74,10 @@ void main() {
       router.queues.add({'.id': '*Q0', 'name': 'autre', 'target': '10.5.50.0/24'});
       await service.slowDevice('10.5.50.20');
       await service.slowDevice('10.5.50.20'); // déjà ralenti : rien de plus
+      await service.slowDevice('10.5.50.20', rate: '512k'); // change seulement la vitesse
       expect(await service.slowedAddresses(), {'10.5.50.20'});
       expect(router.queues.where((q) => q['comment'] == MikhmonService.slowComment).length, 1);
-      expect(router.queues.firstWhere((q) => q['comment'] == MikhmonService.slowComment)['max-limit'], '256k/256k');
+      expect(router.queues.firstWhere((q) => q['comment'] == MikhmonService.slowComment)['max-limit'], '512k/512k');
       await service.unslowDevice('10.5.50.20');
       expect(await service.slowedAddresses(), isEmpty);
       expect(router.queues.length, 1);

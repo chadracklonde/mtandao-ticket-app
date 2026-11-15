@@ -737,7 +737,14 @@ class MikhmonService {
       throw RouterOsException('Adresse invalide : $address');
     }
     if (!isValidRate(rate)) throw RouterOsException('Débit invalide. Exemples : 256k, 512k, 1M.');
-    if ((await slowedAddresses()).contains(address)) return;
+    final existing = await client.run(['/queue/simple/print', '?comment=$slowComment', '=.proplist=.id,target']);
+    for (final r in existing) {
+      if ((r['target'] ?? '').split('/').first == address) {
+        // Déjà ralenti : on change seulement la vitesse.
+        await client.run(['/queue/simple/set', '=.id=${r['.id']}', '=max-limit=${normalizeRate(rate)}']);
+        return;
+      }
+    }
     final first = await client.run(['/queue/simple/print', '=.proplist=.id']);
     await client.run([
       '/queue/simple/add',
