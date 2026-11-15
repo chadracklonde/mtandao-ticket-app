@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/cloud_config.dart';
 import 'sessions_screen.dart';
+import 'sessions_screen.dart';
 
 class CloudAccessScreen extends StatefulWidget {
   const CloudAccessScreen({super.key});
@@ -77,6 +78,7 @@ class _CloudAccessScreenState extends State<CloudAccessScreen> {
               const SizedBox(height: 24),
               TextField(
                 controller: _email,
+                onChanged: (_) => setState(() {}),
                 keyboardType: TextInputType.emailAddress,
                 autofillHints: const [AutofillHints.username, AutofillHints.email],
                 decoration: const InputDecoration(labelText: 'Adresse e-mail', border: OutlineInputBorder()),
@@ -84,6 +86,7 @@ class _CloudAccessScreenState extends State<CloudAccessScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: _password,
+                onChanged: (_) => setState(() {}),
                 obscureText: true,
                 autofillHints: const [AutofillHints.password],
                 decoration: const InputDecoration(labelText: 'Mot de passe', border: OutlineInputBorder()),
@@ -101,6 +104,15 @@ class _CloudAccessScreenState extends State<CloudAccessScreen> {
               TextButton(
                 onPressed: _busy ? null : () => setState(() { _creatingAccount = !_creatingAccount; _error = null; }),
                 child: Text(_creatingAccount ? 'J’ai déjà un compte' : 'Créer un compte'),
+              ),
+              TextButton.icon(
+                onPressed: _busy
+                    ? null
+                    : () => Navigator.of(context).pushReplacement(
+                          MaterialPageRoute<void>(builder: (_) => const SessionsScreen()),
+                        ),
+                icon: const Icon(Icons.wifi),
+                label: const Text('Continuer en mode local, sans Cloud'),
               ),
             ],
           ),
