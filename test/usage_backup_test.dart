@@ -139,6 +139,7 @@ void main() {
       expect(find.text('Ralenti'), findsOneWidget);
       // Arrête le minuteur avant la fin du test.
       await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 10));
     });
   });
 }
