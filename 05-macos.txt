@@ -1,0 +1,14 @@
+The following plugins do not support Swift Package Manager for macos:
+  - flutter_secure_storage_macos
+  - printing
+This will become an error in a future version of Flutter. Please contact the plugin maintainers to request Swift Package Manager adoption.
+Running pod install...                                           1,797ms
+Building macOS application...                                   
+/Users/runner/work/mtandao-ticket-app/mtandao-ticket-app/macos/Pods/Pods.xcodeproj: flutter_secure_storage_macos: ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.6.109.0.0ySD90/Metal.xctoolchain/usr/lib/swift/macosx' not found
+/Users/runner/work/mtandao-ticket-app/mtandao-ticket-app/macos/Pods/Pods.xcodeproj: flutter_secure_storage_macos: ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.6.109.0.0ySD90/Metal.xctoolchain/usr/lib/swift/macosx' not found
+/Users/runner/work/mtandao-ticket-app/mtandao-ticket-app/macos/Pods/Pods.xcodeproj: printing: ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.6.109.0.0ySD90/Metal.xctoolchain/usr/lib/swift/macosx' not found
+/Users/runner/work/mtandao-ticket-app/mtandao-ticket-app/macos/Pods/Pods.xcodeproj: printing: ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.6.109.0.0ySD90/Metal.xctoolchain/usr/lib/swift/macosx' not found
+/Users/runner/work/mtandao-ticket-app/mtandao-ticket-app/macos/Runner.xcodeproj: Runner: ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.6.109.0.0ySD90/Metal.xctoolchain/usr/lib/swift/macosx' not found
+/Users/runner/work/mtandao-ticket-app/mtandao-ticket-app/macos/Runner.xcodeproj: Runner: ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.6.109.0.0ySD90/Metal.xctoolchain/usr/lib/swift/macosx' not found
+warning: Run script build phase 'Run Script' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'Flutter Assemble' from project 'Runner')
+✓ Built build/macos/Build/Products/Release/Mtandao Ticket.app (58.3MB)
